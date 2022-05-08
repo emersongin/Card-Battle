@@ -7,7 +7,7 @@
 /js/*
 !/js/plugins
 /js/plugins/*
-!/js/plugins/CardGame.js
+!/js/plugins/CardBattle.js
 !/js/plugins/src
 *.rpgproject
 *.html
