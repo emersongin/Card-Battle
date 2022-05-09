@@ -1,4 +1,4 @@
-// bundle-js .\js\plugins\src\index.js --dest .\js\plugins\CardBattle.js
+// bundle-js .\js\plugins_dev\CardBattle\index.js --dest .\js\plugins\CardBattle.js --disable-beautify
 
 //=============================================================================
 // CardBattle.js
