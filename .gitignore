@@ -5,6 +5,9 @@
 /img
 /move
 /js/*
+!/js/plugins
+/js/plugins/*
+!/js/plugins/CardBattle.js
 !/js/plugins_dev
 *.rpgproject
 *.html
