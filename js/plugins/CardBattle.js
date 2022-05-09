@@ -21,6 +21,16 @@
             console.log('CardBattle Start');
         }
         
-    }  
+    }
+
+    for (const key in DataManager) {
+        if (Object.hasOwnProperty.call(DataManager, key)) {
+            const element = DataManager[key];
+            
+            console.log(key, element);
+        }
+    }
+
+ 
 })();
 
