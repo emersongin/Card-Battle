@@ -4,6 +4,7 @@
 /icon
 /img
 /move
+/node_modules
 /js/*
 !/js/plugins
 /js/plugins/*
