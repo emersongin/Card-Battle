@@ -2,12 +2,12 @@ class Sprite_Background extends Sprite {
     constructor() {
         super();
     }
-    
+
     initialize() {
+        this._active = false;
         this._sprites = [];
         this._limite = 624;
-        this._speed = 2;
-        this._active = false;
+        this._speed = 1;
 
         super.initialize();
         this.createSpritesParallax();

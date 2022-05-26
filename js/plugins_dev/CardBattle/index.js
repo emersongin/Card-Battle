@@ -13,6 +13,7 @@
 
 (function() {
 // include ./Sprite_Background.js
+// include ./Sprite_Intro.js
 // include ./Spriteset_CardBattle.js 
 // include ./Scene_CardBattle.js 
 // include ./Game_Interpreter.js 
