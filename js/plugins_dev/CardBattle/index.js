@@ -12,6 +12,7 @@
  */
 
 (function() {
+// include ./Window_Title.js
 // include ./Sprite_Background.js
 // include ./Sprite_Intro.js
 // include ./Spriteset_CardBattle.js 

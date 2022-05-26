@@ -24,15 +24,16 @@ class Scene_CardBattle extends Scene_Base {
     }
 
     createAllWindows() {
-        // this.createLogWindow();
+        this.createTitleWindow();
         // this.createStatusWindow();
         // this.createPartyCommandWindow();
         // this.createActorCommandWindow();
     }
 
-    createLogWindow() {
-        // this._logWindow = new Window_BattleLog();
-        // this.addWindow(this._logWindow);
+    createTitleWindow() {
+        this._titleWindow = new Window_Title();
+        this.addWindow(this._titleWindow);
+        
     }
 
     start() {

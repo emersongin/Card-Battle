@@ -12,6 +12,57 @@
  */
 
 (function() {
+class Window_Title extends Window_Base {
+    constructor() {
+        super();
+
+    }
+
+    initialize(numLines) {
+        let width = Graphics.boxWidth;
+        let height = this.fittingHeight(numLines || 1);
+
+        super.initialize(0, 0, width, height);
+        this.openness = 0;
+        this._text = '';
+        this.align('end');
+        this.open();
+
+    }
+
+    align(position = 'start') {
+        switch (position) {
+            case 'start':
+                this.move(0, 0, this.width, this.height);
+                break;
+            case 'center':
+                this.move(0, Graphics.boxHeight / 2 - this.height, this.width, this.height);
+                break;
+            case 'end':
+                this.move(0, Graphics.boxHeight - this.height, this.width, this.height);
+                break;
+        }
+    }
+
+    setText(text) {
+        if (this._text !== text) {
+            this._text = text;
+            this.refresh();
+
+        }
+    }
+    
+    clearText() {
+        this._text = '';
+    }
+        
+    refresh() {
+        this.contents.clear();
+        this.drawTextEx(this._text, this.textPadding(), 0);
+    }
+
+}
+
 class Sprite_Background extends Sprite {
     constructor() {
         super();
@@ -79,6 +130,7 @@ class Sprite_Background extends Sprite {
         }
 
     }
+    
 }
 
 class Sprite_Intro extends Sprite {
@@ -181,13 +233,12 @@ class Spriteset_CardBattle extends Spriteset_Base {
         this._layerIntro = new Sprite_Intro();
         this._baseSprite.addChild(this._layerIntro);
 
-        this._layerIntro.activate();
     }
     
     createBackground() {
         this._background = new Sprite_Background();
         this._baseSprite.addChild(this._background);
-        this._background.activate();
+
     }
 
 }
@@ -218,15 +269,16 @@ class Scene_CardBattle extends Scene_Base {
     }
 
     createAllWindows() {
-        // this.createLogWindow();
+        this.createTitleWindow();
         // this.createStatusWindow();
         // this.createPartyCommandWindow();
         // this.createActorCommandWindow();
     }
 
-    createLogWindow() {
-        // this._logWindow = new Window_BattleLog();
-        // this.addWindow(this._logWindow);
+    createTitleWindow() {
+        this._titleWindow = new Window_Title();
+        this.addWindow(this._titleWindow);
+        
     }
 
     start() {
