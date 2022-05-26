@@ -2,11 +2,22 @@
 
 # fluxo de cenas
 
--create: cria as janelas, sprintes, coleções em seu valor inicial
--start: inicia todo comportamento
--update: atualiza os elementos em frames 60fps
--stop: comportamento de cena ao pausar tela
--terminate: limpar ou destruir memória utilizada no processo de cena
+create: 
+- Create the components and add them to the rendering process.
+
+start:
+- Start the scene processing.
+
+update:
+- Update the scene processing each new frame.
+
+stop:
+- Stop the scene processing.
+
+terminate:
+- Terminate the scene before switching to a another scene.
+
+
 
 -manager: gerencia os processos e auxilia a cena por partes.
 -game:

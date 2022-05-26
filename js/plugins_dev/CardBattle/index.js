@@ -12,5 +12,8 @@
  */
 
 (function() {
-// include ./GameInterpreter.js 
+// include ./Game_Interpreter.js 
+// include ./Scene_CardBattle.js 
+// include ./Spriteset_CardBattle.js 
+// include ./Sprite_Background.js 
 })();
