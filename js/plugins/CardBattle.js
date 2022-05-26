@@ -12,27 +12,108 @@
  */
 
 (function() {
-
-const _Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
-
-Game_Interpreter.prototype.pluginCommand = function (command, args) {
-    _Game_Interpreter_pluginCommand.call(this, command, args);
-
-    if (command === 'CardBattle') {
-        SceneManager.goto(Scene_CardBattle);
-        
+class Sprite_Background extends Sprite {
+    constructor() {
+        super();
     }
-};
+    initialize() {
+        this._sprites = [];
+        this._limite = 624;
+        this._speed = 2;
+        this._active = false;
+
+        super.initialize();
+        this.createSpritesParallax();
+
+    }
+    activate() {
+        this._baseSprite.visible = true;
+        this._active = true;
+    }
+    createSpritesParallax() {
+        const images = [
+            { x: 0, y: 0, name: 'BlueSky' },
+            { x: -this._limite, y: 0, name: 'BlueSky' },
+            { x: 0, y: -this._limite, name: 'BlueSky' },
+            { x: -this._limite, y: -this._limite, name: 'BlueSky' },
+        ];
+
+        this._baseSprite = new Sprite();
+        this._baseSprite.visible = false;
+
+        for (const image of images) {
+            let sprite = new Sprite(ImageManager.loadParallax(image.name));
+
+            sprite.initPositionX = image.x;
+            sprite.initPositionY = image.y;
+
+            sprite.move(sprite.initPositionX, sprite.initPositionY);
+            
+            this._sprites.push(sprite);
+            this._baseSprite.addChild(sprite);
+        }
+
+        this.addChild(this._baseSprite);
+    }
+    update() {
+        super.update();
+        this.updateSprites();
+    }
+    updateSprites() {
+        if(this._active) {
+            this._sprites.forEach(sprite => {
+                let x = sprite.x + this._speed;
+                let y = sprite.y + this._speed;
+    
+                if(x >= (sprite.initPositionX + this._limite)) x = x - this._limite;
+                if(y >= (sprite.initPositionY + this._limite)) y = y - this._limite;
+    
+                sprite.move(x, y);
+    
+            });
+        }
+
+    }
+}
+
+class Spriteset_CardBattle extends Spriteset_Base {
+    constructor() {
+        super();
+    }
+    initialize() {
+        this._backgroundSnap = null;
+        super.initialize();
+
+    }
+    createLowerLayer() {
+        super.createLowerLayer();
+        this.createSnapBackground();
+        // this.createIntro();
+        this.createBackground();
+    }
+    createSnapBackground() {
+        this._backgroundSnap = new Sprite();
+        this._backgroundSnap.bitmap = SceneManager.backgroundBitmap();
+        this._baseSprite.addChild(this._backgroundSnap);
+    }
+    createBackground() {
+        this._background = new Sprite_Background();
+        this._baseSprite.addChild(this._background);
+
+        this._background.activate();
+    }
+}
  
 class Scene_CardBattle extends Scene_Base {
     constructor() {
         super();
         this._spriteset = null;
-        this.initialize();
 
     }
     create() {
         super.create();
+        
+
         this.createDisplayObjects();
     }
     createDisplayObjects() {
@@ -68,69 +149,19 @@ class Scene_CardBattle extends Scene_Base {
     }
 }
  
-class Spriteset_CardBattle extends Spriteset_Base {
-    constructor() {
-        super();
 
-        this._backgroundSnap = null;
-        this.initialize();
+const _Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
+
+Game_Interpreter.prototype.pluginCommand = function (command, args) {
+    _Game_Interpreter_pluginCommand.call(this, command, args);
+
+    if (command === 'CardBattle') {
+        SceneManager.goto(Scene_CardBattle);
+        
     }
-    createLowerLayer() {
-        super.createLowerLayer();
-        this.createSnapBackground();
-        // this.createIntro();
-        this.createBackground();
-    }
-    createSnapBackground() {
-        this._backgroundSnap = new Sprite();
-        this._backgroundSnap.bitmap = SceneManager.backgroundBitmap();
-        this._baseSprite.addChild(this._backgroundSnap);
-    }
-    createBackground() {
-        this._background = new Sprite_Background();
-        this._baseSprite.addChild(this._background);
-    }
-}
+};
  
-class Sprite_Background extends Sprite {
-    constructor() {
-        super();
-        this._sprites = null;
-        this.initialize();
-    }
-    initialize() {
-        super.initialize();
-        this.createSpritesParallax();
-    }
-    createSpritesParallax() {
-        console.log(this._sprites);
-        const images = [
-            { x: 0, y: 0, name: 'BlueSky' },
-            { x: 624, y: 0, name: 'BlueSky' },
-            { x: 0, y: 624, name: 'BlueSky' },
-            { x: 624, y: 624, name: 'BlueSky' },
-        ];
-        this._baseSprite = new Sprite();
-        for (const image of images) {
-            let sprite = new Sprite(ImageManager.loadParallax(image.name));
-            this._sprites.push(sprite);
-            this._baseSprite.addChild(sprite);
-        }
-        this.addChild(this._baseSprite);
-    }
-    update() {
-        super.update();
-        this.updateSprites();
-    }
-    updateSprites() {
-        this._sprites.forEach(sprite => {
-            let x = sprite.x + 1;
-            let y = sprite.y + 1;
-            sprite.move(x, y);
-        });
-    }
-}
- 
+
 })();
 
 
