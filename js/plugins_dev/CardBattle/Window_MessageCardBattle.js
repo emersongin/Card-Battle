@@ -1,4 +1,4 @@
-class Window_Title extends Window_Base {
+class Window_MessageCardBattle extends Window_Base {
     constructor() {
         super();
 
@@ -6,12 +6,13 @@ class Window_Title extends Window_Base {
 
     initialize() {
         let width = Graphics.boxWidth;
-        let height = this.fittingHeight(1);
+        let height = this.fittingHeight(2);
 
         super.initialize(0, 0, width, height);
         this.openness = 0;
         this._text = '';
-        this._alignText = 'center';
+        this._color = '';
+        this._alignText = 'left';
 
     }
 
@@ -21,13 +22,13 @@ class Window_Title extends Window_Base {
                 this.move(0, 0, this.width, this.height);
                 break;
             case 'center-top':
-                this.move(0, (Graphics.boxHeight / 4 * 1) - this.height, this.width, this.height);
+                this.move(0, (Graphics.boxHeight / 4 * 1), this.width, this.height);
                 break;
             case 'center':
-                this.move(0, (Graphics.boxHeight / 2) - this.height, this.width, this.height);
+                this.move(0, (Graphics.boxHeight / 2), this.width, this.height);
                 break;
             case 'center-bottom':
-                this.move(0, (Graphics.boxHeight / 4 * 3) - this.height, this.width, this.height);
+                this.move(0, (Graphics.boxHeight / 4 * 3), this.width, this.height);
                 break;
             case 'bottom':
                 this.move(0, (Graphics.boxHeight - this.height), this.width, this.height);
@@ -35,18 +36,17 @@ class Window_Title extends Window_Base {
         }
     }
 
-    setText(text) {
-        this._text = text;
+    setLinesText(textLine1 = '', textLine2 = '') {
+        this._text = `${this._color}${textLine1}\n${textLine2}`;
         this.refresh();
-
     }
-    
-    clearText() {
+
+    clearTexts() {
         this._text = '';
     }
 
     switchTextColor(wheel) {
-        this.contents.textColor = this.textColor(wheel) || this.textColor(0);
+        this._color = `\\c[${wheel}]`;
     }
     
     sizeText() {
@@ -55,7 +55,7 @@ class Window_Title extends Window_Base {
 
     refresh() {
         this.contents.clear();
-        this.drawText(this._text, 0, 0, this.width - this.sizeText(), this._alignText);
+        this.drawTextEx(this._text, 0, 0);
     }
 
 }

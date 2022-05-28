@@ -19,6 +19,11 @@ class Sprite_Background extends Sprite {
         this._active = true;
     }
 
+    deactivate() {
+        this._baseSprite.visible = false;
+        this._active = false;
+    }
+
     createSpritesParallax() {
         const images = [
             { x: 0, y: 0, name: 'BlueSky' },
