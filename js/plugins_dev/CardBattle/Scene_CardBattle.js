@@ -23,6 +23,21 @@ class Scene_CardBattle extends Scene_Base {
     createSpriteset() {
         this._spriteset = new Spriteset_CardBattle();
         this.addChild(this._spriteset);
+        
+        this.testCardBattle();
+    }
+
+    testCardBattle() {
+        let cardBatter = new Game_Card({
+            ap: 50,
+            hp: 45,
+            color: Game_CardColor.RED,
+            type: Game_CardType.BATTLE
+        });
+        let spriteCardBattler = new Sprite_Card(cardBatter);
+
+        this.addChild(spriteCardBattler);
+
     }
 
     createAllWindows() {
@@ -36,11 +51,11 @@ class Scene_CardBattle extends Scene_Base {
         this._titleWindow = new Window_Title();
         this.addWindow(this._titleWindow);
 
-        this._titleWindow.align('center-top');
-        this._titleWindow.setTextColor(1);
-        this._titleWindow.setText('Choose a folder');
+        // this._titleWindow.align('center-top');
+        // this._titleWindow.setTextColor(1);
+        // this._titleWindow.setText('Choose a folder');
 
-        this._titleWindow.open();
+        // this._titleWindow.open();
         
     }
 
@@ -59,11 +74,11 @@ class Scene_CardBattle extends Scene_Base {
         this._foldersWindow = new Window_FoldersCommand();
         this.addWindow(this._foldersWindow);
 
-        this._foldersWindow.setHandler(this._foldersWindow.action + 1, () => this.action('1'));
-        this._foldersWindow.setHandler(this._foldersWindow.action + 2, () => this.action('2'));
-        this._foldersWindow.setHandler(this._foldersWindow.action + 3, () => this.action('3'));
+        // this._foldersWindow.setHandler(this._foldersWindow.action + 1, () => this.action('1'));
+        // this._foldersWindow.setHandler(this._foldersWindow.action + 2, () => this.action('2'));
+        // this._foldersWindow.setHandler(this._foldersWindow.action + 3, () => this.action('3'));
 
-        this._foldersWindow.open();
+        // this._foldersWindow.open();
 
     }
 

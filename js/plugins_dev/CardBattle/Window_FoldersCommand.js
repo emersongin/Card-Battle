@@ -49,15 +49,15 @@ class Window_FoldersCommand extends Window_Command {
 
     drawItem(index) {
         let rect = this.itemRectForText(index);
-        let yElementsLine = rect.y + this.itemHeight() / 2;
+        let yColorItems = rect.y + this.itemHeight() / 2;
 
         this.drawTextEx(this.commandName(index), rect.x, rect.y);
-        this.drawTextEx(this.drawElementsItems(index), rect.x, yElementsLine);
+        this.drawTextEx(this.drawColorsItems(index), rect.x, yColorItems);
 
     }
 
-    drawElementsItems(index) {
-        let elements = [
+    drawColorsItems(index) {
+        let items = [
             { id: 1, value: 0 },
             { id: 2, value: 0 },
             { id: 3, value: 0 },
@@ -66,9 +66,9 @@ class Window_FoldersCommand extends Window_Command {
         let label = '';
         let indexIcon = 20;
 
-        for (const [index, element] of elements.entries()) {
+        for (const [index, item] of items.entries()) {
             let space = index > 0 ? ' ' : '';
-            let value = element.value.toString().padZero(2);
+            let value = item.value.toString().padZero(2);
 
             label += `${space}\\I[${indexIcon}] ${value}`;
 

@@ -12,12 +12,17 @@
  */
 
 (function() {
-// include ./Window_Title.js
-// include ./Window_FoldersCommand.js
-// include ./Window_MessageCardBattle.js
+// include ./Game_CardColor.js
+// include ./Game_CardType.js
+// include ./Game_CardState.js
+// include ./Game_Card.js
+// include ./Sprite_Card.js
 // include ./Sprite_Background.js
 // include ./Sprite_Intro.js
 // include ./Spriteset_CardBattle.js 
+// include ./Window_Title.js
+// include ./Window_FoldersCommand.js
+// include ./Window_MessageCardBattle.js
 // include ./Scene_CardBattle.js 
 // include ./Game_Interpreter.js 
 

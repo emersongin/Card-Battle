@@ -12,201 +12,88 @@
  */
 
 (function() {
-class Window_Title extends Window_Base {
-    constructor() {
-        super();
-
-    }
-
-    initialize() {
-        const width = Graphics.boxWidth;
-        const height = this.fittingHeight(1);
-
-        super.initialize(0, 0, width, height);
-        this.openness = 0;
-        this._text = '';
-        this._alignText = 'center';
-
-    }
-
-    align(position = 'start') {
-        switch (position) {
-            case 'top':
-                this.move(0, 0, this.width, this.height);
-                break;
-            case 'center-top':
-                this.move(0, (Graphics.boxHeight / 4 * 1) - this.height, this.width, this.height);
-                break;
-            case 'center':
-                this.move(0, (Graphics.boxHeight / 2) - this.height, this.width, this.height);
-                break;
-            case 'center-bottom':
-                this.move(0, (Graphics.boxHeight / 4 * 3) - this.height, this.width, this.height);
-                break;
-            case 'bottom':
-                this.move(0, (Graphics.boxHeight - this.height), this.width, this.height);
-                break;
-        }
-    }
-
-    setText(text) {
-        this._text = text;
-        this.refresh();
-
-    }
-    
-    clearText() {
-        this._text = '';
-    }
-
-    setTextColor(wheel) {
-        this.contents.textColor = this.textColor(wheel) || this.textColor(0);
-    }
-
-    refresh() {
-        this.contents.clear();
-        this.drawText(this._text, 0, 0, this.width, this._alignText);
-    }
-
+function Game_CardColor() {
+    throw new Error('This is a static class');
 }
 
-class Window_FoldersCommand extends Window_Command {
-    constructor() {
-        super();
+Game_CardColor.WHITE = "white";
+Game_CardColor.BLUE = "blue";
+Game_CardColor.GREEN = "green";
+Game_CardColor.RED = "red";
+Game_CardColor.BLACK = "black";
+Game_CardColor.BROWN = "brown";
+
+function Game_CardType() {
+    throw new Error('This is a static class');
+}
+
+Game_CardType.BATTLE = "battle";
+Game_CardType.POWER = "power";
+Game_CardType.NONE = "none";
+
+function Game_CardState() {
+    throw new Error('This is a static class');
+}
+
+Game_CardState.ACTIVE = "active";
+Game_CardState.SELECTED = "selected";
+Game_CardState.INACTIVE = "inactive";
+
+class Game_Card {
+    constructor(Card) {
+        this._card = Card;
+
+        this._AP = Card.ap;
+        this._HP = Card.hp;
+        this._color = Card.color;
+        this._type = Card.type;
+        this._face = false;
+        this._state = Game_CardState.ACTIVE;
 
     }
 
-    initialize() {
-        const y = this.windowHeight() / 2;
-
-        super.initialize(0, y);
-        this.openness = 0;
-        this.action = 'OPTION_FOLDER_';
-        this.deactivate();
-
+    getAP() {
+        return this._AP;
     }
 
-    open() {
-        this.refresh();
-        this.activate();
-        super.open();
-
+    getHP() {
+        return this._HP;
     }
     
-    windowWidth() {
-        return Graphics.boxWidth;
-    }
-
-    windowHeight() {
-        return Graphics.boxHeight / 2;
+    getColor() {
+        return this._color;
     }
     
-    numVisibleRows() {
-        return 3;
+    getType() {
+        return this._type;
     }
-
-    itemHeight() {
-        return Math.floor((this.height - (this.padding * 2)) / this.numVisibleRows());
+    
+    getFace() {
+        return this._face;
     }
-
-    makeCommandList() {
-        for (const folder of [
-            {id: 1, name: 'folder 1'},
-            {id: 2, name: 'folder 2'},
-            {id: 3, name: 'folder 3'},
-        ]) {
-            this.addCommand(folder.name, `${this.action}${folder.id}`);
-        }
-    }
-
-    drawItem(index) {
-        let rect = this.itemRectForText(index);
-        let yElementsLine = rect.y + this.itemHeight() / 2;
-
-        this.drawTextEx(this.commandName(index), rect.x, rect.y);
-        this.drawTextEx(this.drawElementsItems(index), rect.x, yElementsLine);
-
-    }
-
-    drawElementsItems(index) {
-        let elements = [
-            { id: 1, value: 0 },
-            { id: 2, value: 0 },
-            { id: 3, value: 0 },
-        ];
-
-        let label = '';
-        let indexIcon = 20;
-
-        for (const [index, element] of elements.entries()) {
-            let space = index > 0 ? ' ' : '';
-            let value = element.value.toString().padZero(2);
-
-            label += `${space}\\I[${indexIcon}] ${value}`;
-
-            indexIcon++;
-        }
-
-        return label;
+    
+    getState() {
+        return this._state;
     }
 }
 
-class Window_MessageCardBattle extends Window_Base {
-    constructor() {
+class Sprite_Card extends Sprite {
+    constructor(Game_Card) {
         super();
 
-    }
-
-    initialize() {
-        const width = Graphics.boxWidth;
-        const height = this.fittingHeight(2);
-
-        super.initialize(0, 0, width, height);
-        this.openness = 0;
-        this._text = '';
-        this._color = '';
-        this._alignText = 'left';
+        this._AP = Game_Card.getAP();
+        this._HP = Game_Card.getHP();
+        this._color = Game_Card.getColor();
+        this._type = Game_Card.getType();
+        this._face = Game_Card.getFace();
+        this._state = Game_Card.getState();
 
     }
 
-    align(position = 'start') {
-        switch (position) {
-            case 'top':
-                this.move(0, 0, this.width, this.height);
-                break;
-            case 'center-top':
-                this.move(0, (Graphics.boxHeight / 4 * 1), this.width, this.height);
-                break;
-            case 'center':
-                this.move(0, (Graphics.boxHeight / 2), this.width, this.height);
-                break;
-            case 'center-bottom':
-                this.move(0, (Graphics.boxHeight / 4 * 3), this.width, this.height);
-                break;
-            case 'bottom':
-                this.move(0, (Graphics.boxHeight - this.height), this.width, this.height);
-                break;
-        }
-    }
+    initialize(Game_Card) {
+        super.initialize();
 
-    setLinesText(textLine1 = '', textLine2 = '') {
-        this._text = `${this._color}${textLine1}\n${textLine2}`;
-        this.refresh();
     }
-
-    clearTexts() {
-        this._text = '';
-    }
-
-    setTextColor(wheel) {
-        this._color = `\\c[${wheel}]`;
-    }
-    
-    refresh() {
-        this.contents.clear();
-        this.drawTextEx(this._text, 0, 0);
-    }
-
 }
 
 class Sprite_Background extends Sprite {
@@ -436,6 +323,203 @@ class Spriteset_CardBattle extends Spriteset_Base {
 
 }
  
+class Window_Title extends Window_Base {
+    constructor() {
+        super();
+
+    }
+
+    initialize() {
+        const width = Graphics.boxWidth;
+        const height = this.fittingHeight(1);
+
+        super.initialize(0, 0, width, height);
+        this.openness = 0;
+        this._text = '';
+        this._alignText = 'center';
+
+    }
+
+    align(position = 'start') {
+        switch (position) {
+            case 'top':
+                this.move(0, 0, this.width, this.height);
+                break;
+            case 'center-top':
+                this.move(0, (Graphics.boxHeight / 4 * 1) - this.height, this.width, this.height);
+                break;
+            case 'center':
+                this.move(0, (Graphics.boxHeight / 2) - this.height, this.width, this.height);
+                break;
+            case 'center-bottom':
+                this.move(0, (Graphics.boxHeight / 4 * 3) - this.height, this.width, this.height);
+                break;
+            case 'bottom':
+                this.move(0, (Graphics.boxHeight - this.height), this.width, this.height);
+                break;
+        }
+    }
+
+    setText(text) {
+        this._text = text;
+        this.refresh();
+
+    }
+    
+    clearText() {
+        this._text = '';
+    }
+
+    setTextColor(wheel) {
+        this.contents.textColor = this.textColor(wheel) || this.textColor(0);
+    }
+
+    refresh() {
+        this.contents.clear();
+        this.drawText(this._text, 0, 0, this.width, this._alignText);
+    }
+
+}
+
+class Window_FoldersCommand extends Window_Command {
+    constructor() {
+        super();
+
+    }
+
+    initialize() {
+        const y = this.windowHeight() / 2;
+
+        super.initialize(0, y);
+        this.openness = 0;
+        this.action = 'OPTION_FOLDER_';
+        this.deactivate();
+
+    }
+
+    open() {
+        this.refresh();
+        this.activate();
+        super.open();
+
+    }
+    
+    windowWidth() {
+        return Graphics.boxWidth;
+    }
+
+    windowHeight() {
+        return Graphics.boxHeight / 2;
+    }
+    
+    numVisibleRows() {
+        return 3;
+    }
+
+    itemHeight() {
+        return Math.floor((this.height - (this.padding * 2)) / this.numVisibleRows());
+    }
+
+    makeCommandList() {
+        for (const folder of [
+            {id: 1, name: 'folder 1'},
+            {id: 2, name: 'folder 2'},
+            {id: 3, name: 'folder 3'},
+        ]) {
+            this.addCommand(folder.name, `${this.action}${folder.id}`);
+        }
+    }
+
+    drawItem(index) {
+        let rect = this.itemRectForText(index);
+        let yColorItems = rect.y + this.itemHeight() / 2;
+
+        this.drawTextEx(this.commandName(index), rect.x, rect.y);
+        this.drawTextEx(this.drawColorsItems(index), rect.x, yColorItems);
+
+    }
+
+    drawColorsItems(index) {
+        let items = [
+            { id: 1, value: 0 },
+            { id: 2, value: 0 },
+            { id: 3, value: 0 },
+        ];
+
+        let label = '';
+        let indexIcon = 20;
+
+        for (const [index, item] of items.entries()) {
+            let space = index > 0 ? ' ' : '';
+            let value = item.value.toString().padZero(2);
+
+            label += `${space}\\I[${indexIcon}] ${value}`;
+
+            indexIcon++;
+        }
+
+        return label;
+    }
+}
+
+class Window_MessageCardBattle extends Window_Base {
+    constructor() {
+        super();
+
+    }
+
+    initialize() {
+        const width = Graphics.boxWidth;
+        const height = this.fittingHeight(2);
+
+        super.initialize(0, 0, width, height);
+        this.openness = 0;
+        this._text = '';
+        this._color = '';
+        this._alignText = 'left';
+
+    }
+
+    align(position = 'start') {
+        switch (position) {
+            case 'top':
+                this.move(0, 0, this.width, this.height);
+                break;
+            case 'center-top':
+                this.move(0, (Graphics.boxHeight / 4 * 1), this.width, this.height);
+                break;
+            case 'center':
+                this.move(0, (Graphics.boxHeight / 2), this.width, this.height);
+                break;
+            case 'center-bottom':
+                this.move(0, (Graphics.boxHeight / 4 * 3), this.width, this.height);
+                break;
+            case 'bottom':
+                this.move(0, (Graphics.boxHeight - this.height), this.width, this.height);
+                break;
+        }
+    }
+
+    setLinesText(textLine1 = '', textLine2 = '') {
+        this._text = `${this._color}${textLine1}\n${textLine2}`;
+        this.refresh();
+    }
+
+    clearTexts() {
+        this._text = '';
+    }
+
+    setTextColor(wheel) {
+        this._color = `\\c[${wheel}]`;
+    }
+    
+    refresh() {
+        this.contents.clear();
+        this.drawTextEx(this._text, 0, 0);
+    }
+
+}
+
 class Scene_CardBattle extends Scene_Base {
     constructor() {
         super();
@@ -461,6 +545,22 @@ class Scene_CardBattle extends Scene_Base {
     createSpriteset() {
         this._spriteset = new Spriteset_CardBattle();
         this.addChild(this._spriteset);
+        
+        this.testCardBattle();
+    }
+
+    testCardBattle() {
+        let cardBatter = new Game_Card({
+            ap: 50,
+            hp: 45,
+            color: Game_CardColor.RED,
+            type: Game_CardType.BATTLE
+        });
+        let spriteCardBattler = new Sprite_Card(cardBatter);
+
+        this.addChild(spriteCardBattler);
+
+        console.log(cardBatter.getAP(), spriteCardBattler);
     }
 
     createAllWindows() {
@@ -474,11 +574,11 @@ class Scene_CardBattle extends Scene_Base {
         this._titleWindow = new Window_Title();
         this.addWindow(this._titleWindow);
 
-        this._titleWindow.align('center-top');
-        this._titleWindow.setTextColor(1);
-        this._titleWindow.setText('Choose a folder');
+        // this._titleWindow.align('center-top');
+        // this._titleWindow.setTextColor(1);
+        // this._titleWindow.setText('Choose a folder');
 
-        this._titleWindow.open();
+        // this._titleWindow.open();
         
     }
 
@@ -497,11 +597,11 @@ class Scene_CardBattle extends Scene_Base {
         this._foldersWindow = new Window_FoldersCommand();
         this.addWindow(this._foldersWindow);
 
-        this._foldersWindow.setHandler(this._foldersWindow.action + 1, () => this.action('1'));
-        this._foldersWindow.setHandler(this._foldersWindow.action + 2, () => this.action('2'));
-        this._foldersWindow.setHandler(this._foldersWindow.action + 3, () => this.action('3'));
+        // this._foldersWindow.setHandler(this._foldersWindow.action + 1, () => this.action('1'));
+        // this._foldersWindow.setHandler(this._foldersWindow.action + 2, () => this.action('2'));
+        // this._foldersWindow.setHandler(this._foldersWindow.action + 3, () => this.action('3'));
 
-        this._foldersWindow.open();
+        // this._foldersWindow.open();
 
     }
 
