@@ -5,8 +5,8 @@ class Window_MessageCardBattle extends Window_Base {
     }
 
     initialize() {
-        let width = Graphics.boxWidth;
-        let height = this.fittingHeight(2);
+        const width = Graphics.boxWidth;
+        const height = this.fittingHeight(2);
 
         super.initialize(0, 0, width, height);
         this.openness = 0;
@@ -45,14 +45,10 @@ class Window_MessageCardBattle extends Window_Base {
         this._text = '';
     }
 
-    switchTextColor(wheel) {
+    setTextColor(wheel) {
         this._color = `\\c[${wheel}]`;
     }
     
-    sizeText() {
-        return (this.contents.fontSize * this._text.length / 2) - (this.standardPadding() + 6);
-    }
-
     refresh() {
         this.contents.clear();
         this.drawTextEx(this._text, 0, 0);

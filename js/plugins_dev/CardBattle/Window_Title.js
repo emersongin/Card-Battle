@@ -5,8 +5,8 @@ class Window_Title extends Window_Base {
     }
 
     initialize() {
-        let width = Graphics.boxWidth;
-        let height = this.fittingHeight(1);
+        const width = Graphics.boxWidth;
+        const height = this.fittingHeight(1);
 
         super.initialize(0, 0, width, height);
         this.openness = 0;
@@ -45,17 +45,13 @@ class Window_Title extends Window_Base {
         this._text = '';
     }
 
-    switchTextColor(wheel) {
+    setTextColor(wheel) {
         this.contents.textColor = this.textColor(wheel) || this.textColor(0);
-    }
-    
-    sizeText() {
-        return (this.contents.fontSize * this._text.length / 2) - (this.standardPadding() + 6);
     }
 
     refresh() {
         this.contents.clear();
-        this.drawText(this._text, 0, 0, this.width - this.sizeText(), this._alignText);
+        this.drawText(this._text, 0, 0, this.width, this._alignText);
     }
 
 }

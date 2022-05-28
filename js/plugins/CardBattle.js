@@ -19,8 +19,8 @@ class Window_Title extends Window_Base {
     }
 
     initialize() {
-        let width = Graphics.boxWidth;
-        let height = this.fittingHeight(1);
+        const width = Graphics.boxWidth;
+        const height = this.fittingHeight(1);
 
         super.initialize(0, 0, width, height);
         this.openness = 0;
@@ -59,19 +59,96 @@ class Window_Title extends Window_Base {
         this._text = '';
     }
 
-    switchTextColor(wheel) {
+    setTextColor(wheel) {
         this.contents.textColor = this.textColor(wheel) || this.textColor(0);
-    }
-    
-    sizeText() {
-        return (this.contents.fontSize * this._text.length / 2) - (this.standardPadding() + 6);
     }
 
     refresh() {
         this.contents.clear();
-        this.drawText(this._text, 0, 0, this.width - this.sizeText(), this._alignText);
+        this.drawText(this._text, 0, 0, this.width, this._alignText);
     }
 
+}
+
+class Window_FoldersCommand extends Window_Command {
+    constructor() {
+        super();
+
+    }
+
+    initialize() {
+        const y = this.windowHeight() / 2;
+
+        super.initialize(0, y);
+        this.openness = 0;
+        this.action = 'OPTION_FOLDER_';
+        this.deactivate();
+
+    }
+
+    open() {
+        this.refresh();
+        this.activate();
+        super.open();
+
+    }
+    
+    windowWidth() {
+        return Graphics.boxWidth;
+    }
+
+    windowHeight() {
+        return Graphics.boxHeight / 2;
+    }
+    
+    numVisibleRows() {
+        return 3;
+    }
+
+    itemHeight() {
+        return Math.floor((this.height - (this.padding * 2)) / this.numVisibleRows());
+    }
+
+    makeCommandList() {
+        for (const folder of [
+            {id: 1, name: 'folder 1'},
+            {id: 2, name: 'folder 2'},
+            {id: 3, name: 'folder 3'},
+        ]) {
+            this.addCommand(folder.name, `${this.action}${folder.id}`);
+        }
+    }
+
+    drawItem(index) {
+        let rect = this.itemRectForText(index);
+        let yElementsLine = rect.y + this.itemHeight() / 2;
+
+        this.drawTextEx(this.commandName(index), rect.x, rect.y);
+        this.drawTextEx(this.drawElementsItems(index), rect.x, yElementsLine);
+
+    }
+
+    drawElementsItems(index) {
+        let elements = [
+            { id: 1, value: 0 },
+            { id: 2, value: 0 },
+            { id: 3, value: 0 },
+        ];
+
+        let label = '';
+        let indexIcon = 20;
+
+        for (const [index, element] of elements.entries()) {
+            let space = index > 0 ? ' ' : '';
+            let value = element.value.toString().padZero(2);
+
+            label += `${space}\\I[${indexIcon}] ${value}`;
+
+            indexIcon++;
+        }
+
+        return label;
+    }
 }
 
 class Window_MessageCardBattle extends Window_Base {
@@ -81,8 +158,8 @@ class Window_MessageCardBattle extends Window_Base {
     }
 
     initialize() {
-        let width = Graphics.boxWidth;
-        let height = this.fittingHeight(2);
+        const width = Graphics.boxWidth;
+        const height = this.fittingHeight(2);
 
         super.initialize(0, 0, width, height);
         this.openness = 0;
@@ -121,14 +198,10 @@ class Window_MessageCardBattle extends Window_Base {
         this._text = '';
     }
 
-    switchTextColor(wheel) {
+    setTextColor(wheel) {
         this._color = `\\c[${wheel}]`;
     }
     
-    sizeText() {
-        return (this.contents.fontSize * this._text.length / 2) - (this.standardPadding() + 6);
-    }
-
     refresh() {
         this.contents.clear();
         this.drawTextEx(this._text, 0, 0);
@@ -369,6 +442,7 @@ class Scene_CardBattle extends Scene_Base {
         this._spriteset = null;
         this._titleWindow = null;
         this._messageWindow = null;
+        this._foldersWindow = null;
 
     }
 
@@ -392,7 +466,7 @@ class Scene_CardBattle extends Scene_Base {
     createAllWindows() {
         this.createTitleWindow();
         this.createMessageWindow();
-        // this.createPartyCommandWindow();
+        this.createFoldersCommandWindow();
         // this.createActorCommandWindow();
     }
 
@@ -400,9 +474,9 @@ class Scene_CardBattle extends Scene_Base {
         this._titleWindow = new Window_Title();
         this.addWindow(this._titleWindow);
 
-        this._titleWindow.align('center');
-        this._titleWindow.switchTextColor(1);
-        this._titleWindow.setText('Start');
+        this._titleWindow.align('center-top');
+        this._titleWindow.setTextColor(1);
+        this._titleWindow.setText('Choose a folder');
 
         this._titleWindow.open();
         
@@ -412,11 +486,28 @@ class Scene_CardBattle extends Scene_Base {
         this._messageWindow = new Window_MessageCardBattle();
         this.addWindow(this._messageWindow);
 
-        this._messageWindow.align('center');
-        this._messageWindow.switchTextColor(1);
-        this._messageWindow.setLinesText('Emerson Andrey', '29');
+        // this._messageWindow.align('center');
+        // this._messageWindow.setTextColor(1);
+        // this._messageWindow.setLinesText('Emerson Andrey', '29');
 
-        this._messageWindow.open();
+        // this._messageWindow.open();
+    }
+
+    createFoldersCommandWindow() {
+        this._foldersWindow = new Window_FoldersCommand();
+        this.addWindow(this._foldersWindow);
+
+        this._foldersWindow.setHandler(this._foldersWindow.action + 1, () => this.action('1'));
+        this._foldersWindow.setHandler(this._foldersWindow.action + 2, () => this.action('2'));
+        this._foldersWindow.setHandler(this._foldersWindow.action + 3, () => this.action('3'));
+
+        this._foldersWindow.open();
+
+    }
+
+    action(text) {
+        console.log('teste ' + text);
+        this._foldersWindow.close();
     }
 
     start() {
