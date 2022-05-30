@@ -37,7 +37,6 @@ class Scene_CardBattle extends Scene_Base {
         let spriteCardBattler = new Sprite_Card(cardBatter);
 
         this.addChild(spriteCardBattler);
-
     }
 
     createAllWindows() {
