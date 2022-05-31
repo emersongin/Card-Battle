@@ -22,6 +22,7 @@ class Spriteset_CardBattle extends Spriteset_Base {
         this._backgroundSnap = new Sprite();
         this._backgroundSnap.bitmap = SceneManager.backgroundBitmap();
         this._baseSprite.addChild(this._backgroundSnap);
+
     }
 
     createIntro() {

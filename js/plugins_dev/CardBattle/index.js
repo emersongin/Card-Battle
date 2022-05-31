@@ -12,6 +12,7 @@
  */
 
 (function() {
+// include ./ImageManager.js
 // include ./Game_CardColor.js
 // include ./Game_CardType.js
 // include ./Game_CardState.js
@@ -25,6 +26,6 @@
 // include ./Window_MessageCardBattle.js
 // include ./Scene_CardBattle.js 
 // include ./Game_Interpreter.js 
-// include ./ImageManager.js
+// include ./Goto.js
 
 })();

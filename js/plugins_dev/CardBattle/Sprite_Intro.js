@@ -10,6 +10,7 @@ class Sprite_Intro extends Sprite {
         this._clearRectangle = null;
         this._blackRectangles = [];
         super.initialize();
+        this.bitmap = new Bitmap(Graphics.boxWidth, Graphics.boxHeight);
         this.createPicture();
 
     }
@@ -66,11 +67,11 @@ class Sprite_Intro extends Sprite {
             let rect = this._clearRectangle;
 
             super.update();
-            this.refreshPicture();
+            this.refresh();
             this.updateClearRectangle();
 
             if (rect.x >= (Graphics.boxWidth / 2) || rect.y >= (Graphics.boxHeight / 2) ) {
-                this.refreshPicture({ clearRect: false, blackReacts: true });
+                this.refresh({ clearRect: false, blackReacts: true });
                 this.updateBlackRectangles();
 
                 if(this._blackRectangles[0].x <= 0) this.deactivate();
@@ -93,10 +94,10 @@ class Sprite_Intro extends Sprite {
         });
     }
 
-    refreshPicture(params = { clearRect: true, blackReacts: false }) {
+    refresh(params = { clearRect: true, blackReacts: false }) {
         let rect = this._clearRectangle;
 
-        this.bitmap = new Bitmap(Graphics.boxWidth, Graphics.boxHeight);
+        this.bitmap.clear();
         this.bitmap.blt(this._picture, 0, 0, Graphics.boxWidth, Graphics.boxHeight, 0, 0);
         if (params.clearRect) this.bitmap.clearRect(rect.x, rect.y, rect.width, rect.height);
 

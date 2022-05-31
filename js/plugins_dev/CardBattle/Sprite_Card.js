@@ -11,18 +11,19 @@ class Sprite_Card extends Sprite {
         this._figure = Game_Card.getFigure();
 
         this.initialize();
+        this.setFrame(0, 0, this.cardWidth(), this.cardHeight());
+
     }
 
     initialize() {
         super.initialize();
-        this.setFrame(0, 0, this.cardWidth(), this.cardHeight());
+        this.bitmap = new Bitmap(this.cardWidth(), this.cardHeight());
         this._border = null;
         this._background = null;
         this._figure = null;
-        this.bitmap = new Bitmap(this.cardWidth(), this.cardHeight());
         this.createBackground();
         this.createFigure();
-        this.refresh();
+
     }
 
     createBackground() {
@@ -77,13 +78,41 @@ class Sprite_Card extends Sprite {
     }
 
     createFigure() {
-        this._figure = ImageManager.loadBattlecards('Slime');
+
+        this._figure = ImageManager.loadBattlecards('Gargoyle');
+    }
+
+    draw(Bitmap, params = { align: 'center' }) {
+        let x = 0, y = 0;
+
+        switch (params.align) {
+            case 'start':
+                break;
+            case 'center':
+                x = (this.cardWidth() - Bitmap.width) / 2;
+                y = (this.cardHeight() - Bitmap.height) / 2;
+                break;
+            case 'end':
+                break;
+            default:
+                break;
+        }
+
+        // Bitmap.resize(100, 100); 
+
+        this.bitmap.blt(Bitmap, 0, 0, Bitmap.width, Bitmap.height, x, y);
+
     }
 
     refresh() {
+        this.bitmap.clear();
+        this.draw(this._border);
+        this.draw(this._background);
+        this.draw(this._figure);
+
         if (true) { //this.isFaceUp()
             // this.bitmap.blt(this._background, 0, 0, this.cardWidth(), this.cardHeight(), 2, 2);
-            this.bitmap.blt(this._figure, 0, 0, this.cardWidth(), this.cardHeight(), 2, 2);
+            // this.bitmap.blt(this._figure, 0, 0, this.cardWidth(), this.cardHeight(), 2, 2);
         } else {
 
         }
@@ -102,6 +131,9 @@ class Sprite_Card extends Sprite {
         return Math.floor(Graphics.boxHeight / 5);
     }
 
-
+    update() {
+        super.update();
+        this.refresh();
+    }
 
 }

@@ -50,7 +50,7 @@ class Scene_CardBattle extends Scene_Base {
         this.createTitleWindow();
         this.createMessageWindow();
         this.createFoldersCommandWindow();
-        // this.createActorCommandWindow();
+
     }
 
     createTitleWindow() {

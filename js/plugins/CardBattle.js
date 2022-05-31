@@ -12,6 +12,18 @@
  */
 
 (function() {
+ImageManager.reserveBattlecards  = function (filename, hue, reservationId) {
+    return this.reserveBitmap('img/battlecards/', filename, hue, true, reservationId);
+};
+
+ImageManager.requestBattlecards = function (filename, hue) {
+    return this.requestBitmap('img/battlecards/', filename, hue, true);
+};
+
+ImageManager.loadBattlecards  = function (filename, hue) {
+    return this.loadBitmap('img/battlecards/', filename, hue, false);
+};
+
 function Game_CardColor() {
     throw new Error('This is a static class');
 }
@@ -95,18 +107,19 @@ class Sprite_Card extends Sprite {
         this._figure = Game_Card.getFigure();
 
         this.initialize();
+        this.setFrame(0, 0, this.cardWidth(), this.cardHeight());
+
     }
 
     initialize() {
         super.initialize();
-        this.setFrame(0, 0, this.cardWidth(), this.cardHeight());
+        this.bitmap = new Bitmap(this.cardWidth(), this.cardHeight());
         this._border = null;
         this._background = null;
         this._figure = null;
-        this.bitmap = new Bitmap(this.cardWidth(), this.cardHeight());
         this.createBackground();
         this.createFigure();
-        this.refresh();
+
     }
 
     createBackground() {
@@ -161,13 +174,41 @@ class Sprite_Card extends Sprite {
     }
 
     createFigure() {
-        this._figure = ImageManager.loadBattlecards('Slime');
+
+        this._figure = ImageManager.loadBattlecards('Gargoyle');
+    }
+
+    draw(Bitmap, params = { align: 'center' }) {
+        let x = 0, y = 0;
+
+        switch (params.align) {
+            case 'start':
+                break;
+            case 'center':
+                x = (this.cardWidth() - Bitmap.width) / 2;
+                y = (this.cardHeight() - Bitmap.height) / 2;
+                break;
+            case 'end':
+                break;
+            default:
+                break;
+        }
+
+        // Bitmap.resize(100, 100); 
+
+        this.bitmap.blt(Bitmap, 0, 0, Bitmap.width, Bitmap.height, x, y);
+
     }
 
     refresh() {
+        this.bitmap.clear();
+        this.draw(this._border);
+        this.draw(this._background);
+        this.draw(this._figure);
+
         if (true) { //this.isFaceUp()
             // this.bitmap.blt(this._background, 0, 0, this.cardWidth(), this.cardHeight(), 2, 2);
-            this.bitmap.blt(this._figure, 0, 0, this.cardWidth(), this.cardHeight(), 2, 2);
+            // this.bitmap.blt(this._figure, 0, 0, this.cardWidth(), this.cardHeight(), 2, 2);
         } else {
 
         }
@@ -186,7 +227,10 @@ class Sprite_Card extends Sprite {
         return Math.floor(Graphics.boxHeight / 5);
     }
 
-
+    update() {
+        super.update();
+        this.refresh();
+    }
 
 }
 
@@ -277,6 +321,7 @@ class Sprite_Intro extends Sprite {
         this._clearRectangle = null;
         this._blackRectangles = [];
         super.initialize();
+        this.bitmap = new Bitmap(Graphics.boxWidth, Graphics.boxHeight);
         this.createPicture();
 
     }
@@ -333,11 +378,11 @@ class Sprite_Intro extends Sprite {
             let rect = this._clearRectangle;
 
             super.update();
-            this.refreshPicture();
+            this.refresh();
             this.updateClearRectangle();
 
             if (rect.x >= (Graphics.boxWidth / 2) || rect.y >= (Graphics.boxHeight / 2) ) {
-                this.refreshPicture({ clearRect: false, blackReacts: true });
+                this.refresh({ clearRect: false, blackReacts: true });
                 this.updateBlackRectangles();
 
                 if(this._blackRectangles[0].x <= 0) this.deactivate();
@@ -360,10 +405,10 @@ class Sprite_Intro extends Sprite {
         });
     }
 
-    refreshPicture(params = { clearRect: true, blackReacts: false }) {
+    refresh(params = { clearRect: true, blackReacts: false }) {
         let rect = this._clearRectangle;
 
-        this.bitmap = new Bitmap(Graphics.boxWidth, Graphics.boxHeight);
+        this.bitmap.clear();
         this.bitmap.blt(this._picture, 0, 0, Graphics.boxWidth, Graphics.boxHeight, 0, 0);
         if (params.clearRect) this.bitmap.clearRect(rect.x, rect.y, rect.width, rect.height);
 
@@ -401,6 +446,7 @@ class Spriteset_CardBattle extends Spriteset_Base {
         this._backgroundSnap = new Sprite();
         this._backgroundSnap.bitmap = SceneManager.backgroundBitmap();
         this._baseSprite.addChild(this._backgroundSnap);
+
     }
 
     createIntro() {
@@ -666,7 +712,7 @@ class Scene_CardBattle extends Scene_Base {
         this.createTitleWindow();
         this.createMessageWindow();
         this.createFoldersCommandWindow();
-        // this.createActorCommandWindow();
+
     }
 
     createTitleWindow() {
@@ -738,16 +784,24 @@ Game_Interpreter.prototype.pluginCommand = function (command, args) {
     }
 };
  
-ImageManager.loadBattlecards = function(filename, hue) {
-    return this.loadBitmap('img/battlecards/', filename, hue, true);
-};
+Scene_Boot.prototype.start = function () {
+    Scene_Base.prototype.start.call(this);
+    SoundManager.preloadImportantSounds();
+    if (DataManager.isBattleTest()) {
+        DataManager.setupBattleTest();
+        SceneManager.goto(Scene_Battle);
+    } else if (DataManager.isEventTest()) {
+        DataManager.setupEventTest();
+        SceneManager.goto(Scene_Map);
+    } else {
+        this.checkPlayerLocation();
+        DataManager.setupNewGame();
 
-ImageManager.requestBattlecards = function(filename, hue) {
-    return this.requestBitmap('img/battlecards/', filename, hue, false);
-};
-
-ImageManager.reserveBattlecards  = function (filename, hue, reservationId) {
-    return this.reserveBitmap('img/battlecards/', filename, hue, true, reservationId);
+        SceneManager.goto(Scene_CardBattle);
+        
+        Window_TitleCommand.initCommandPosition();
+    }
+    this.updateDocumentTitle();
 };
 
 
