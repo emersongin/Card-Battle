@@ -49,6 +49,7 @@ class Game_Card {
         this._type = Card.type;
         this._face = false;
         this._state = Game_CardState.ACTIVE;
+        this._figure = Card.figure;
 
     }
 
@@ -75,6 +76,10 @@ class Game_Card {
     getState() {
         return this._state;
     }
+
+    getFigure() {
+        return this._figure;
+    }
 }
 
 class Sprite_Card extends Sprite {
@@ -87,6 +92,7 @@ class Sprite_Card extends Sprite {
         this._type = Game_Card.getType();
         this._face = Game_Card.getFace();
         this._state = Game_Card.getState();
+        this._figure = Game_Card.getFigure();
 
         this.initialize();
     }
@@ -94,13 +100,20 @@ class Sprite_Card extends Sprite {
     initialize() {
         super.initialize();
         this.setFrame(0, 0, this.cardWidth(), this.cardHeight());
+        this._border = null;
+        this._background = null;
+        this._figure = null;
         this.bitmap = new Bitmap(this.cardWidth(), this.cardHeight());
         this.createBackground();
-
+        this.createFigure();
+        this.refresh();
     }
 
     createBackground() {
-        const context = this.bitmap._context;
+        this._border = new Bitmap(this.cardWidth(), this.cardHeight());
+        this._background = new Bitmap(this.cardWidth(), this.cardHeight());
+
+        const context = this._border._context;
 
         let rectX = 0;
         let rectY = 0;
@@ -116,8 +129,53 @@ class Sprite_Card extends Sprite {
             rectWidth - cornerRadius, rectHeight - cornerRadius
         );
 
-        this.bitmap.fillRect( rectX + 2, rectY + 2, rectWidth - 4, rectHeight - 4, this._color);
+        this._background.fillRect( 
+            rectX + 2, rectY + 2, 
+            rectWidth - 4, rectHeight - 4, 
+            this.backgroundColors(this._color)
+        );
 
+    }
+
+    backgroundColors(color) {
+        switch (color) {
+            case 'white':
+                return '#edfff5';
+                break;
+            case 'blue':
+                return '#777ae3';
+                break;
+            case 'green':
+                return '#5dee57';
+                break;
+            case 'red':
+                return '#f33434';
+                break;
+            case 'black':
+                return '#414141';
+                break;
+            case 'brown':
+                return '#915f2d';
+                break;
+        }
+    }
+
+    createFigure() {
+        this._figure = ImageManager.loadBattlecards('Slime');
+    }
+
+    refresh() {
+        if (true) { //this.isFaceUp()
+            // this.bitmap.blt(this._background, 0, 0, this.cardWidth(), this.cardHeight(), 2, 2);
+            this.bitmap.blt(this._figure, 0, 0, this.cardWidth(), this.cardHeight(), 2, 2);
+        } else {
+
+        }
+        
+    }
+
+    isFaceUp() {
+        return this._face == true;
     }
 
     cardWidth() {
@@ -586,17 +644,21 @@ class Scene_CardBattle extends Scene_Base {
     }
 
     testCardBattle() {
-        let cardBatter = new Game_Card({
-            ap: 50,
-            hp: 45,
-            color: Game_CardColor.RED,
-            type: Game_CardType.BATTLE
+        let cards = [
+            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.WHITE,type: Game_CardType.BATTLE}),
+            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.BLUE,type: Game_CardType.BATTLE}),
+            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.GREEN,type: Game_CardType.BATTLE}),
+            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.RED,type: Game_CardType.BATTLE}),
+            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.BLACK,type: Game_CardType.BATTLE}),
+            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.BROWN,type: Game_CardType.BATTLE}),
+        ];
+        let sprites = [];
+
+        cards.forEach(card => sprites.push(new Sprite_Card(card)));
+        sprites.forEach((sprite, index) => {
+            sprite.move(index * sprite.width, 0);
+            this.addChild(sprite);
         });
-        let spriteCardBattler = new Sprite_Card(cardBatter);
-
-        this.addChild(spriteCardBattler);
-
-        console.log(spriteCardBattler);
 
     }
 
@@ -676,6 +738,18 @@ Game_Interpreter.prototype.pluginCommand = function (command, args) {
     }
 };
  
+ImageManager.loadBattlecards = function(filename, hue) {
+    return this.loadBitmap('img/battlecards/', filename, hue, true);
+};
+
+ImageManager.requestBattlecards = function(filename, hue) {
+    return this.requestBitmap('img/battlecards/', filename, hue, false);
+};
+
+ImageManager.reserveBattlecards  = function (filename, hue, reservationId) {
+    return this.reserveBitmap('img/battlecards/', filename, hue, true, reservationId);
+};
+
 
 })();
 

@@ -8,6 +8,7 @@ class Game_Card {
         this._type = Card.type;
         this._face = false;
         this._state = Game_CardState.ACTIVE;
+        this._figure = Card.figure;
 
     }
 
@@ -33,5 +34,9 @@ class Game_Card {
     
     getState() {
         return this._state;
+    }
+
+    getFigure() {
+        return this._figure;
     }
 }

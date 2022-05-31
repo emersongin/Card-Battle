@@ -8,6 +8,7 @@ class Sprite_Card extends Sprite {
         this._type = Game_Card.getType();
         this._face = Game_Card.getFace();
         this._state = Game_Card.getState();
+        this._figure = Game_Card.getFigure();
 
         this.initialize();
     }
@@ -15,13 +16,20 @@ class Sprite_Card extends Sprite {
     initialize() {
         super.initialize();
         this.setFrame(0, 0, this.cardWidth(), this.cardHeight());
+        this._border = null;
+        this._background = null;
+        this._figure = null;
         this.bitmap = new Bitmap(this.cardWidth(), this.cardHeight());
         this.createBackground();
-
+        this.createFigure();
+        this.refresh();
     }
 
     createBackground() {
-        const context = this.bitmap._context;
+        this._border = new Bitmap(this.cardWidth(), this.cardHeight());
+        this._background = new Bitmap(this.cardWidth(), this.cardHeight());
+
+        const context = this._border._context;
 
         let rectX = 0;
         let rectY = 0;
@@ -37,8 +45,53 @@ class Sprite_Card extends Sprite {
             rectWidth - cornerRadius, rectHeight - cornerRadius
         );
 
-        this.bitmap.fillRect( rectX + 2, rectY + 2, rectWidth - 4, rectHeight - 4, this._color);
+        this._background.fillRect( 
+            rectX + 2, rectY + 2, 
+            rectWidth - 4, rectHeight - 4, 
+            this.backgroundColors(this._color)
+        );
 
+    }
+
+    backgroundColors(color) {
+        switch (color) {
+            case 'white':
+                return '#edfff5';
+                break;
+            case 'blue':
+                return '#777ae3';
+                break;
+            case 'green':
+                return '#5dee57';
+                break;
+            case 'red':
+                return '#f33434';
+                break;
+            case 'black':
+                return '#414141';
+                break;
+            case 'brown':
+                return '#915f2d';
+                break;
+        }
+    }
+
+    createFigure() {
+        this._figure = ImageManager.loadBattlecards('Slime');
+    }
+
+    refresh() {
+        if (true) { //this.isFaceUp()
+            // this.bitmap.blt(this._background, 0, 0, this.cardWidth(), this.cardHeight(), 2, 2);
+            this.bitmap.blt(this._figure, 0, 0, this.cardWidth(), this.cardHeight(), 2, 2);
+        } else {
+
+        }
+        
+    }
+
+    isFaceUp() {
+        return this._face == true;
     }
 
     cardWidth() {

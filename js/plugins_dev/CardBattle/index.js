@@ -25,5 +25,6 @@
 // include ./Window_MessageCardBattle.js
 // include ./Scene_CardBattle.js 
 // include ./Game_Interpreter.js 
+// include ./ImageManager.js
 
 })();

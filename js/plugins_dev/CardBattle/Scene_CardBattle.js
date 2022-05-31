@@ -28,15 +28,22 @@ class Scene_CardBattle extends Scene_Base {
     }
 
     testCardBattle() {
-        let cardBatter = new Game_Card({
-            ap: 50,
-            hp: 45,
-            color: Game_CardColor.RED,
-            type: Game_CardType.BATTLE
-        });
-        let spriteCardBattler = new Sprite_Card(cardBatter);
+        let cards = [
+            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.WHITE,type: Game_CardType.BATTLE}),
+            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.BLUE,type: Game_CardType.BATTLE}),
+            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.GREEN,type: Game_CardType.BATTLE}),
+            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.RED,type: Game_CardType.BATTLE}),
+            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.BLACK,type: Game_CardType.BATTLE}),
+            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.BROWN,type: Game_CardType.BATTLE}),
+        ];
+        let sprites = [];
 
-        this.addChild(spriteCardBattler);
+        cards.forEach(card => sprites.push(new Sprite_Card(card)));
+        sprites.forEach((sprite, index) => {
+            sprite.move(index * sprite.width, 0);
+            this.addChild(sprite);
+        });
+
     }
 
     createAllWindows() {
