@@ -54,14 +54,15 @@ Game_CardState.INACTIVE = "inactive";
 class Game_Card {
     constructor(Card) {
         this._card = Card;
-
+        //
         this._AP = Card.ap;
         this._HP = Card.hp;
         this._color = Card.color;
         this._type = Card.type;
-        this._face = false;
+        this._file = Card.file;
+        //
         this._state = Game_CardState.ACTIVE;
-        this._figure = Card.figure;
+        this._face = false;
 
     }
 
@@ -89,8 +90,8 @@ class Game_Card {
         return this._state;
     }
 
-    getFigure() {
-        return this._figure;
+    getFile() {
+        return this._file;
     }
 }
 
@@ -102,9 +103,9 @@ class Sprite_Card extends Sprite {
         this._HP = Game_Card.getHP();
         this._color = Game_Card.getColor();
         this._type = Game_Card.getType();
-        this._face = Game_Card.getFace();
+        this._face = Game_Card.getFace() || true;
         this._state = Game_Card.getState();
-        this._figure = Game_Card.getFigure();
+        this._file = Game_Card.getFile();
 
         this.initialize();
         this.setFrame(0, 0, this.cardWidth(), this.cardHeight());
@@ -114,11 +115,13 @@ class Sprite_Card extends Sprite {
     initialize() {
         super.initialize();
         this.bitmap = new Bitmap(this.cardWidth(), this.cardHeight());
+        this.bitmap.fontSize = 14;
         this._border = null;
         this._background = null;
-        this._figure = null;
+        this._figure = new Sprite();
         this.createBackground();
         this.createFigure();
+        this.refresh();
 
     }
 
@@ -174,41 +177,31 @@ class Sprite_Card extends Sprite {
     }
 
     createFigure() {
+        // size card figure 96x96
 
-        this._figure = ImageManager.loadBattlecards('Gargoyle');
+        this._figure.move(3, 4);
+        this._figure.bitmap = ImageManager.loadBattlecards(this._file);
+        // this._figure.bitmap.fillAll('red');
+        
     }
 
-    draw(Bitmap, params = { align: 'center' }) {
-        let x = 0, y = 0;
+    drawBlock(Bitmap) {
+        this.bitmap.blt(Bitmap, 0, 0, Bitmap.width, Bitmap.height, 0, 0);
 
-        switch (params.align) {
-            case 'start':
-                break;
-            case 'center':
-                x = (this.cardWidth() - Bitmap.width) / 2;
-                y = (this.cardHeight() - Bitmap.height) / 2;
-                break;
-            case 'end':
-                break;
-            default:
-                break;
-        }
+    }
 
-        // Bitmap.resize(100, 100); 
-
-        this.bitmap.blt(Bitmap, 0, 0, Bitmap.width, Bitmap.height, x, y);
-
+    drawPoints() {
+        this.bitmap.drawText(`${this._AP}/${this._HP}`, 0, this.cardHeight() - 24, this.cardWidth(), 24, 'center');
     }
 
     refresh() {
-        this.bitmap.clear();
-        this.draw(this._border);
-        this.draw(this._background);
-        this.draw(this._figure);
+        if (this.isFaceUp()) {
+            this.bitmap.clear();
+            this.drawBlock(this._border);
+            this.drawBlock(this._background);
+            this.drawPoints();
+            this.addChild(this._figure);
 
-        if (true) { //this.isFaceUp()
-            // this.bitmap.blt(this._background, 0, 0, this.cardWidth(), this.cardHeight(), 2, 2);
-            // this.bitmap.blt(this._figure, 0, 0, this.cardWidth(), this.cardHeight(), 2, 2);
         } else {
 
         }
@@ -230,6 +223,7 @@ class Sprite_Card extends Sprite {
     update() {
         super.update();
         this.refresh();
+
     }
 
 }
@@ -691,12 +685,12 @@ class Scene_CardBattle extends Scene_Base {
 
     testCardBattle() {
         let cards = [
-            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.WHITE,type: Game_CardType.BATTLE}),
-            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.BLUE,type: Game_CardType.BATTLE}),
-            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.GREEN,type: Game_CardType.BATTLE}),
-            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.RED,type: Game_CardType.BATTLE}),
-            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.BLACK,type: Game_CardType.BATTLE}),
-            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.BROWN,type: Game_CardType.BATTLE}),
+            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.WHITE,type: Game_CardType.BATTLE, file: 'example'}),
+            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.BLUE,type: Game_CardType.BATTLE, file: 'example'}),
+            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.GREEN,type: Game_CardType.BATTLE, file: 'example'}),
+            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.RED,type: Game_CardType.BATTLE, file: 'example'}),
+            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.BLACK,type: Game_CardType.BATTLE, file: 'example'}),
+            new Game_Card({ap: 50,hp: 45,color: Game_CardColor.BROWN,type: Game_CardType.BATTLE, file: 'example'}),
         ];
         let sprites = [];
 

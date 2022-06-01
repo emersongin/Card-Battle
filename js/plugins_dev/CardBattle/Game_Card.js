@@ -1,14 +1,15 @@
 class Game_Card {
     constructor(Card) {
         this._card = Card;
-
+        //
         this._AP = Card.ap;
         this._HP = Card.hp;
         this._color = Card.color;
         this._type = Card.type;
-        this._face = false;
+        this._file = Card.file;
+        //
         this._state = Game_CardState.ACTIVE;
-        this._figure = Card.figure;
+        this._face = false;
 
     }
 
@@ -36,7 +37,7 @@ class Game_Card {
         return this._state;
     }
 
-    getFigure() {
-        return this._figure;
+    getFile() {
+        return this._file;
     }
 }
