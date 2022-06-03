@@ -8,6 +8,7 @@ class Sprite_Card extends Sprite {
         this._type = Game_Card.getType() || Game_CardType.NONE;
         this._state = Game_Card.getState() || Game_CardState.ACTIVE;
         this._face = Game_Card.getFace() || true;
+        this._select = Game_Card.getFace() || false;
         this._file = Game_Card.getFile() || 'index';
 
         this._mirrorAP = Game_Card.getAP() || 0;
@@ -31,7 +32,7 @@ class Sprite_Card extends Sprite {
         this.setup();
         this.createBackground();
         this.createFigure();
-
+        this.createSelected();
 
 
         this.refresh();
@@ -41,6 +42,7 @@ class Sprite_Card extends Sprite {
         this._border = new Bitmap(this.cardWidth(), this.cardHeight());
         this._background = new Bitmap(this.cardWidth(), this.cardHeight());
         this._figure = new Sprite();
+        this._selected = new Sprite();
         //
         this.bitmap = new Bitmap(this.cardWidth(), this.cardHeight());
         this.bitmap.fontSize = 14;
@@ -107,17 +109,21 @@ class Sprite_Card extends Sprite {
         this.addChild(this._figure);
     }
 
+    createSelected() {
+        //..
+    }
+
     refresh() {
         if (this.isFaceUp()) {
             this.bitmap.clear();
             this.draw(this._border);
             this.draw(this._background);
             this.drawType();
+            this.drawSelect();
 
         } else {
-
+            //faceDown
         }
-        
     }
 
     isFaceUp() {
@@ -126,27 +132,33 @@ class Sprite_Card extends Sprite {
 
     draw(Bitmap) {
         this.bitmap.blt(Bitmap, 0, 0, Bitmap.width, Bitmap.height, 0, 0);
-
     }
 
     drawType() {
         if(this._type === Game_CardType.BATTLE) {
             this.drawPoints();
         } else if(this._type === Game_CardType.POWER) {
-            this.drawDescription('( P )');
+            this.drawCaption('( P )');
         } else {
-            this.drawDescription('');
+            this.drawCaption('?');
+        }
+    }
+
+    drawSelect() {
+        if(this._select) {
+
         }
     }
 
     drawPoints() {
         this.bitmap.drawText(
-            `${this._AP}/${this._HP}`,
-            0,
-            this.cardHeight() - 24,
-            this.cardWidth(),
-            24,
-            'center'
+            `${this._AP}/${this._HP}`, 0, this.cardHeight() - 24, this.cardWidth(), 24, 'center'
+        );
+    }
+
+    drawCaption(caption) {
+        this.bitmap.drawText(
+            `${caption}`, 0, this.cardHeight() - 24, this.cardWidth(), 24, 'center'
         );
     }
 

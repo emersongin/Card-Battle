@@ -10,6 +10,7 @@ class Game_Card {
         //
         this._state = Game_CardState.ACTIVE;
         this._face = false;
+        this._select = false;
 
     }
 
@@ -31,6 +32,10 @@ class Game_Card {
     
     getFace() {
         return this._face;
+    }
+
+    getSelected() {
+        return this._select;
     }
     
     getState() {
