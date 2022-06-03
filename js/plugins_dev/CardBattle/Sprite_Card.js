@@ -2,36 +2,52 @@ class Sprite_Card extends Sprite {
     constructor(Game_Card) {
         super();
 
-        this._AP = Game_Card.getAP();
-        this._HP = Game_Card.getHP();
-        this._color = Game_Card.getColor();
-        this._type = Game_Card.getType();
+        this._AP = Game_Card.getAP() || 0;
+        this._HP = Game_Card.getAP() || 0;
+        this._color = Game_Card.getColor() || Game_CardColor.BROWN;
+        this._type = Game_Card.getType() || Game_CardType.NONE;
+        this._state = Game_Card.getState() || Game_CardState.ACTIVE;
         this._face = Game_Card.getFace() || true;
-        this._state = Game_Card.getState();
-        this._file = Game_Card.getFile();
+        this._file = Game_Card.getFile() || 'index';
+
+        this._mirrorAP = Game_Card.getAP() || 0;
+        this._mirrorHP = Game_Card.getHP() || 0;
 
         this.initialize();
         this.setFrame(0, 0, this.cardWidth(), this.cardHeight());
 
     }
 
+    cardWidth() {
+        return Math.floor(Graphics.boxWidth / 8);
+    }
+
+    cardHeight() {
+        return Math.floor(Graphics.boxHeight / 5);
+    }
+
     initialize() {
         super.initialize();
-        this.bitmap = new Bitmap(this.cardWidth(), this.cardHeight());
-        this.bitmap.fontSize = 14;
-        this._border = null;
-        this._background = null;
-        this._figure = new Sprite();
+        this.setup();
         this.createBackground();
         this.createFigure();
+
+
+
         this.refresh();
+    }
+
+    setup() {
+        this._border = new Bitmap(this.cardWidth(), this.cardHeight());
+        this._background = new Bitmap(this.cardWidth(), this.cardHeight());
+        this._figure = new Sprite();
+        //
+        this.bitmap = new Bitmap(this.cardWidth(), this.cardHeight());
+        this.bitmap.fontSize = 14;
 
     }
 
     createBackground() {
-        this._border = new Bitmap(this.cardWidth(), this.cardHeight());
-        this._background = new Bitmap(this.cardWidth(), this.cardHeight());
-
         const context = this._border._context;
 
         let rectX = 0;
@@ -48,7 +64,7 @@ class Sprite_Card extends Sprite {
             rectWidth - cornerRadius, rectHeight - cornerRadius
         );
 
-        this._background.fillRect( 
+        this._background.fillRect(
             rectX + 2, rectY + 2, 
             rectWidth - 4, rectHeight - 4, 
             this.backgroundColors(this._color)
@@ -84,26 +100,19 @@ class Sprite_Card extends Sprite {
 
         this._figure.move(3, 4);
         this._figure.bitmap = ImageManager.loadBattlecards(this._file);
+        
+        // @tests
         // this._figure.bitmap.fillAll('red');
         
-    }
-
-    drawBlock(Bitmap) {
-        this.bitmap.blt(Bitmap, 0, 0, Bitmap.width, Bitmap.height, 0, 0);
-
-    }
-
-    drawPoints() {
-        this.bitmap.drawText(`${this._AP}/${this._HP}`, 0, this.cardHeight() - 24, this.cardWidth(), 24, 'center');
+        this.addChild(this._figure);
     }
 
     refresh() {
         if (this.isFaceUp()) {
             this.bitmap.clear();
-            this.drawBlock(this._border);
-            this.drawBlock(this._background);
-            this.drawPoints();
-            this.addChild(this._figure);
+            this.draw(this._border);
+            this.draw(this._background);
+            this.drawType();
 
         } else {
 
@@ -112,21 +121,57 @@ class Sprite_Card extends Sprite {
     }
 
     isFaceUp() {
-        return this._face == true;
+        return this._face === true;
     }
 
-    cardWidth() {
-        return Math.floor(Graphics.boxWidth / 8);
+    draw(Bitmap) {
+        this.bitmap.blt(Bitmap, 0, 0, Bitmap.width, Bitmap.height, 0, 0);
+
     }
 
-    cardHeight() {
-        return Math.floor(Graphics.boxHeight / 5);
+    drawType() {
+        if(this._type === Game_CardType.BATTLE) {
+            this.drawPoints();
+        } else if(this._type === Game_CardType.POWER) {
+            this.drawDescription('( P )');
+        } else {
+            this.drawDescription('');
+        }
+    }
+
+    drawPoints() {
+        this.bitmap.drawText(
+            `${this._AP}/${this._HP}`,
+            0,
+            this.cardHeight() - 24,
+            this.cardWidth(),
+            24,
+            'center'
+        );
     }
 
     update() {
         super.update();
-        this.refresh();
+        this.updatePoints();
 
+    }
+
+    updatePoints() {
+        if(this._mirrorAP !== this._AP || this._mirrorHP !== this._HP) {
+            if(this._mirrorAP > this._AP) {
+                this._AP++;
+            } else if (this._mirrorAP < this._AP) {
+                this._AP--;
+            } 
+    
+            if(this._mirrorHP > this._HP) {
+                this._HP++;
+            } else if (this._mirrorHP < this._HP) {
+                this._HP--;
+            } 
+    
+            this.refresh();
+        }
     }
 
 }
