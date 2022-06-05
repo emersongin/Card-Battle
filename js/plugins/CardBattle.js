@@ -63,7 +63,7 @@ class Game_Card {
         //
         this._state = Game_CardState.ACTIVE;
         this._face = false;
-        this._select = false;
+        this._selected = false;
 
     }
 
@@ -87,8 +87,8 @@ class Game_Card {
         return this._face;
     }
 
-    getSelect() {
-        return this._select;
+    getSelected() {
+        return this._selected;
     }
     
     getState() {
@@ -104,23 +104,28 @@ class Sprite_Card extends Sprite {
     constructor(Game_Card) {
         super();
 
-        this._AP = 0;
-        this._HP = 0;
+        this._AP = Game_Card.getAP() || 0;
+        this._HP = Game_Card.getHP() || 0;
         this._color = Game_Card.getColor() || Game_CardColor.BROWN;
         this._type = Game_Card.getType() || Game_CardType.NONE;
         this._state = Game_Card.getState() || Game_CardState.ACTIVE;
         this._face = Game_Card.getFace() || true;
-        this._select = Game_Card.getSelect() || true;
+        this._selected = Game_Card.getSelected() || true;
         this._file = Game_Card.getFile() || 'index';
 
         this._mirrorAP = Game_Card.getAP() || 0;
         this._mirrorHP = Game_Card.getHP() || 0;
 
+        this._frameCounter = 0;
         this._pointsSpeed = 2;
 
         this.initialize();
         this.setFrame(0, 0, this.cardWidth(), this.cardHeight());
 
+    }
+
+    isSelected() {
+        return this._selected;
     }
 
     cardWidth() {
@@ -143,7 +148,7 @@ class Sprite_Card extends Sprite {
         this._background = new Sprite(new Bitmap(this.cardWidth(), this.cardHeight()));
         this._figure = new Sprite();
         this._caption = new Sprite();
-        this._selected = new Sprite();
+        this._select = new Sprite();
         //
         this.bitmap = new Bitmap(this.cardWidth(), this.cardHeight());
 
@@ -165,14 +170,26 @@ class Sprite_Card extends Sprite {
         this.addChild(this._background);
         this.addChild(this._figure);
         this.addChild(this._caption);
-        this.addChild(this._selected);
+        this.addChild(this._select);
     }
 
     createBackground() {
         let border = new Bitmap(this.cardWidth(), this.cardHeight());
         let background = new Bitmap(this.cardWidth(), this.cardHeight());
 
-        const context = border._context;
+        this.createBorder(border, 'grey');
+
+        background.fillRect(
+            2, 2, this.cardWidth() - 4, this.cardHeight() - 4, 
+            this.backgroundColors(this._color)
+        );
+
+        this._background.bitmap.blt(border, 0, 0, border.width, border.height, 0, 0);
+        this._background.bitmap.blt(background, 0, 0, background.width, background.height, 0, 0);
+    }
+
+    createBorder(bitmap, color) {
+        const context = bitmap._context;
 
         let rectX = 0;
         let rectY = 0;
@@ -182,20 +199,12 @@ class Sprite_Card extends Sprite {
 
         context.lineJoin = "round";
         context.lineWidth = cornerRadius;
-        context.strokeStyle = 'gray';
+        context.strokeStyle = color;
         context.strokeRect(
             rectX + (cornerRadius/2), rectY + (cornerRadius/2), 
             rectWidth - cornerRadius, rectHeight - cornerRadius
         );
 
-        background.fillRect(
-            rectX + 2, rectY + 2, 
-            rectWidth - 4, rectHeight - 4, 
-            this.backgroundColors(this._color)
-        );
-
-        this._background.bitmap.blt(border, 0, 0, border.width, border.height, 0, 0);
-        this._background.bitmap.blt(background, 0, 0, background.width, background.height, 0, 0);
     }
 
     backgroundColors(color) {
@@ -224,7 +233,7 @@ class Sprite_Card extends Sprite {
     createFigure() {
         // size card figure 96x96
 
-        this._figure.move(3, 4);
+        this._figure.move(4, 4);
         this._figure.bitmap = ImageManager.loadBattlecards(this._file);
         
         // @tests
@@ -239,9 +248,11 @@ class Sprite_Card extends Sprite {
     }
 
     createSelected() {
-        this._selected.move(16, 16);
-        this._selected.bitmap = new Bitmap(8, 8);
-        this._selected.bitmap.fillAll(this.backgroundColors('black'));
+        this._select.move(1, 1);
+        this._select.bitmap = new Bitmap(this.cardWidth(), this.cardHeight());
+        this.createBorder(this._select.bitmap, '#fff435');
+        this._select.bitmap.clearRect (3, 3, this.cardWidth() - 6, this.cardHeight() - 6);
+
     }
 
     refresh() {
@@ -269,8 +280,8 @@ class Sprite_Card extends Sprite {
     }
 
     drawSelect() {
-        if(this._select) {
-            this.addChildAt(this._selected, this._layers.selected);
+        if(this.isSelected()) {
+            this.addChildAt(this._select, this._layers.selected);
         } else {
             this.removeChildAt(this._layers.selected);
         }
@@ -286,7 +297,9 @@ class Sprite_Card extends Sprite {
     update() {
         super.update();
         this.updatePoints();
+        this.updateSelected();
 
+        this._frameCounter++;
     }
 
     updatePoints() {
@@ -313,6 +326,13 @@ class Sprite_Card extends Sprite {
         } else if (this._mirrorHP < this._HP) {
             this._HP--;
         }
+    }
+
+    updateSelected() {
+        if(this.isSelected() && this._frameCounter % 8 == 0) {
+            this._select.opacity = this._select.opacity == 255 ? 228 : 255;
+        }
+
     }
 
 }
@@ -775,13 +795,13 @@ class Scene_CardBattle extends Scene_Base {
     testCardBattle() {
         let cards = [
             new Game_Card({ap: 99,hp: 999,color: Game_CardColor.WHITE,type: Game_CardType.BATTLE, file: 'example'}),
-            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLUE,type: Game_CardType.POWER, file: 'example'}),
-            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.GREEN,type: Game_CardType.NONE, file: 'example'}),
-            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.RED,type: Game_CardType.BATTLE, file: 'example'}),
-            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLACK,type: Game_CardType.BATTLE, file: 'example'}),
-            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BROWN,type: Game_CardType.BATTLE, file: 'example'}),
-            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.GREEN,type: Game_CardType.NONE, file: 'example'}),
-            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.RED,type: Game_CardType.BATTLE, file: 'example'}),
+            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLUE,type: Game_CardType.POWER, file: 'example'}),
+            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.GREEN,type: Game_CardType.NONE, file: 'example'}),
+            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.RED,type: Game_CardType.BATTLE, file: 'example'}),
+            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLACK,type: Game_CardType.BATTLE, file: 'example'}),
+            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BROWN,type: Game_CardType.BATTLE, file: 'example'}),
+            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.GREEN,type: Game_CardType.NONE, file: 'example'}),
+            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.RED,type: Game_CardType.BATTLE, file: 'example'}),
         ];
         let sprites = [];
 
