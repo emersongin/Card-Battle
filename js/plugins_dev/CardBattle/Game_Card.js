@@ -34,7 +34,7 @@ class Game_Card {
         return this._face;
     }
 
-    getSelected() {
+    getSelect() {
         return this._select;
     }
     

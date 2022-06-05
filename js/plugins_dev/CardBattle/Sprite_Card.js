@@ -2,17 +2,19 @@ class Sprite_Card extends Sprite {
     constructor(Game_Card) {
         super();
 
-        this._AP = Game_Card.getAP() || 0;
-        this._HP = Game_Card.getAP() || 0;
+        this._AP = 0;
+        this._HP = 0;
         this._color = Game_Card.getColor() || Game_CardColor.BROWN;
         this._type = Game_Card.getType() || Game_CardType.NONE;
         this._state = Game_Card.getState() || Game_CardState.ACTIVE;
         this._face = Game_Card.getFace() || true;
-        this._select = Game_Card.getFace() || false;
+        this._select = Game_Card.getSelect() || true;
         this._file = Game_Card.getFile() || 'index';
 
         this._mirrorAP = Game_Card.getAP() || 0;
         this._mirrorHP = Game_Card.getHP() || 0;
+
+        this._pointsSpeed = 2;
 
         this.initialize();
         this.setFrame(0, 0, this.cardWidth(), this.cardHeight());
@@ -20,37 +22,55 @@ class Sprite_Card extends Sprite {
     }
 
     cardWidth() {
-        return Math.floor(Graphics.boxWidth / 8);
+        return 102;
     }
 
     cardHeight() {
-        return Math.floor(Graphics.boxHeight / 5);
+        return 124;
     }
 
     initialize() {
         super.initialize();
         this.setup();
-        this.createBackground();
-        this.createFigure();
-        this.createSelected();
-
-
+        this.createLayers();
         this.refresh();
+
     }
 
     setup() {
-        this._border = new Bitmap(this.cardWidth(), this.cardHeight());
-        this._background = new Bitmap(this.cardWidth(), this.cardHeight());
+        this._background = new Sprite(new Bitmap(this.cardWidth(), this.cardHeight()));
         this._figure = new Sprite();
+        this._caption = new Sprite();
         this._selected = new Sprite();
         //
         this.bitmap = new Bitmap(this.cardWidth(), this.cardHeight());
-        this.bitmap.fontSize = 14;
 
     }
 
+    createLayers() {
+        this._layers = {
+            background: 0,
+            figure: 1,
+            caption: 2,
+            selected: 3
+        };
+
+        this.createBackground();
+        this.createFigure();
+        this.createCaption();
+        this.createSelected();
+
+        this.addChild(this._background);
+        this.addChild(this._figure);
+        this.addChild(this._caption);
+        this.addChild(this._selected);
+    }
+
     createBackground() {
-        const context = this._border._context;
+        let border = new Bitmap(this.cardWidth(), this.cardHeight());
+        let background = new Bitmap(this.cardWidth(), this.cardHeight());
+
+        const context = border._context;
 
         let rectX = 0;
         let rectY = 0;
@@ -66,12 +86,14 @@ class Sprite_Card extends Sprite {
             rectWidth - cornerRadius, rectHeight - cornerRadius
         );
 
-        this._background.fillRect(
+        background.fillRect(
             rectX + 2, rectY + 2, 
             rectWidth - 4, rectHeight - 4, 
             this.backgroundColors(this._color)
         );
 
+        this._background.bitmap.blt(border, 0, 0, border.width, border.height, 0, 0);
+        this._background.bitmap.blt(background, 0, 0, background.width, background.height, 0, 0);
     }
 
     backgroundColors(color) {
@@ -105,19 +127,23 @@ class Sprite_Card extends Sprite {
         
         // @tests
         // this._figure.bitmap.fillAll('red');
-        
-        this.addChild(this._figure);
+
+    }
+
+    createCaption() {
+        this._caption.move(0, this.cardHeight() - 24);
+        this._caption.bitmap = new Bitmap(this.cardWidth(), 24);
+        this._caption.bitmap.fontSize = 14;
     }
 
     createSelected() {
-        //..
+        this._selected.move(16, 16);
+        this._selected.bitmap = new Bitmap(8, 8);
+        this._selected.bitmap.fillAll(this.backgroundColors('black'));
     }
 
     refresh() {
         if (this.isFaceUp()) {
-            this.bitmap.clear();
-            this.draw(this._border);
-            this.draw(this._background);
             this.drawType();
             this.drawSelect();
 
@@ -130,13 +156,9 @@ class Sprite_Card extends Sprite {
         return this._face === true;
     }
 
-    draw(Bitmap) {
-        this.bitmap.blt(Bitmap, 0, 0, Bitmap.width, Bitmap.height, 0, 0);
-    }
-
     drawType() {
         if(this._type === Game_CardType.BATTLE) {
-            this.drawPoints();
+            this.drawCaption(`${this._AP}/${this._HP}`);
         } else if(this._type === Game_CardType.POWER) {
             this.drawCaption('( P )');
         } else {
@@ -146,19 +168,16 @@ class Sprite_Card extends Sprite {
 
     drawSelect() {
         if(this._select) {
-
+            this.addChildAt(this._selected, this._layers.selected);
+        } else {
+            this.removeChildAt(this._layers.selected);
         }
     }
 
-    drawPoints() {
-        this.bitmap.drawText(
-            `${this._AP}/${this._HP}`, 0, this.cardHeight() - 24, this.cardWidth(), 24, 'center'
-        );
-    }
-
     drawCaption(caption) {
-        this.bitmap.drawText(
-            `${caption}`, 0, this.cardHeight() - 24, this.cardWidth(), 24, 'center'
+        this._caption.bitmap.clear();
+        this._caption.bitmap.drawText(
+            `${caption}`, 0, 0, this.cardWidth(), 24, 'center'
         );
     }
 
@@ -170,19 +189,27 @@ class Sprite_Card extends Sprite {
 
     updatePoints() {
         if(this._mirrorAP !== this._AP || this._mirrorHP !== this._HP) {
-            if(this._mirrorAP > this._AP) {
-                this._AP++;
-            } else if (this._mirrorAP < this._AP) {
-                this._AP--;
-            } 
-    
-            if(this._mirrorHP > this._HP) {
-                this._HP++;
-            } else if (this._mirrorHP < this._HP) {
-                this._HP--;
-            } 
-    
+            let speed = this._pointsSpeed || 1;
+
+            for (let times = 1; times <= speed; times++) {
+                this.updatePointsOnce();
+            }
+
             this.refresh();
+        }
+    }
+
+    updatePointsOnce() {
+        if(this._mirrorAP > this._AP) {
+            this._AP++;
+        } else if (this._mirrorAP < this._AP) {
+            this._AP--;
+        } 
+
+        if(this._mirrorHP > this._HP) {
+            this._HP++;
+        } else if (this._mirrorHP < this._HP) {
+            this._HP--;
         }
     }
 
