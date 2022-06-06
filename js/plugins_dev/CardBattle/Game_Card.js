@@ -8,8 +8,8 @@ class Game_Card {
         this._type = Card.type;
         this._file = Card.file;
         //
-        this._state = Game_CardState.ACTIVE;
-        this._face = false;
+        this._state = false;
+        this._face = true;
         this._selected = false;
 
     }

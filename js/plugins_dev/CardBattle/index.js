@@ -15,7 +15,6 @@
 // include ./ImageManager.js
 // include ./Game_CardColor.js
 // include ./Game_CardType.js
-// include ./Game_CardState.js
 // include ./Game_Card.js
 // include ./Sprite_Card.js
 // include ./Sprite_Background.js

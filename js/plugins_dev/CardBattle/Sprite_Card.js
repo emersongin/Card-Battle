@@ -6,9 +6,9 @@ class Sprite_Card extends Sprite {
         this._HP = Game_Card.getHP() || 0;
         this._color = Game_Card.getColor() || Game_CardColor.BROWN;
         this._type = Game_Card.getType() || Game_CardType.NONE;
-        this._state = Game_Card.getState() || Game_CardState.ACTIVE;
+        this._state = Game_Card.getState();
         this._face = Game_Card.getFace() || true;
-        this._selected = Game_Card.getSelected() || true;
+        this._selected = Game_Card.getSelected();
         this._file = Game_Card.getFile() || 'index';
 
         this._mirrorAP = Game_Card.getAP() || 0;
@@ -22,8 +22,12 @@ class Sprite_Card extends Sprite {
 
     }
 
+    isInactive() { console.log(this._state === false, this._state, false);
+        return this._state === false;
+    }
+
     isSelected() {
-        return this._selected;
+        return this._selected === true;
     }
 
     cardWidth() {
@@ -44,11 +48,10 @@ class Sprite_Card extends Sprite {
 
     setup() {
         this._background = new Sprite(new Bitmap(this.cardWidth(), this.cardHeight()));
-        this._figure = new Sprite();
-        this._caption = new Sprite();
-        this._select = new Sprite();
-        //
-        this.bitmap = new Bitmap(this.cardWidth(), this.cardHeight());
+        this._figure = new Sprite(new Bitmap(this.cardWidth(), this.cardHeight()));
+        this._caption = new Sprite(new Bitmap(this.cardWidth(), 24));
+        this._shadow = new Sprite(new Bitmap(this.cardWidth(), this.cardHeight()));
+        this._select = new Sprite(new Bitmap(this.cardWidth(), this.cardHeight()));
 
     }
 
@@ -57,33 +60,30 @@ class Sprite_Card extends Sprite {
             background: 0,
             figure: 1,
             caption: 2,
-            selected: 3
+            shadow: 3,
+            selected: 4
         };
 
         this.createBackground();
         this.createFigure();
         this.createCaption();
+        this.createShadow();
         this.createSelected();
 
         this.addChild(this._background);
         this.addChild(this._figure);
         this.addChild(this._caption);
+        this.addChild(this._shadow);
         this.addChild(this._select);
     }
 
     createBackground() {
-        let border = new Bitmap(this.cardWidth(), this.cardHeight());
-        let background = new Bitmap(this.cardWidth(), this.cardHeight());
+        this.createBorder(this._background.bitmap, 'grey');
 
-        this.createBorder(border, 'grey');
-
-        background.fillRect(
+        this._background.bitmap.fillRect(
             2, 2, this.cardWidth() - 4, this.cardHeight() - 4, 
             this.backgroundColors(this._color)
         );
-
-        this._background.bitmap.blt(border, 0, 0, border.width, border.height, 0, 0);
-        this._background.bitmap.blt(background, 0, 0, background.width, background.height, 0, 0);
     }
 
     createBorder(bitmap, color) {
@@ -131,7 +131,7 @@ class Sprite_Card extends Sprite {
     createFigure() {
         // size card figure 96x96
 
-        this._figure.move(4, 4);
+        this._figure.move(3, 3);
         this._figure.bitmap = ImageManager.loadBattlecards(this._file);
         
         // @tests
@@ -141,13 +141,18 @@ class Sprite_Card extends Sprite {
 
     createCaption() {
         this._caption.move(0, this.cardHeight() - 24);
-        this._caption.bitmap = new Bitmap(this.cardWidth(), 24);
         this._caption.bitmap.fontSize = 14;
+
+    }
+
+    createShadow() {
+        this.createBorder(this._shadow.bitmap, 'black');
+        this._shadow.bitmap.fillRect(2, 2, this.cardWidth() - 4, this.cardHeight() - 4, 'black');
+        this._shadow.opacity = 128;
+
     }
 
     createSelected() {
-        this._select.move(1, 1);
-        this._select.bitmap = new Bitmap(this.cardWidth(), this.cardHeight());
         this.createBorder(this._select.bitmap, '#fff435');
         this._select.bitmap.clearRect (3, 3, this.cardWidth() - 6, this.cardHeight() - 6);
 
@@ -156,6 +161,7 @@ class Sprite_Card extends Sprite {
     refresh() {
         if (this.isFaceUp()) {
             this.drawType();
+            this.drawShadow();
             this.drawSelect();
 
         } else {
@@ -177,11 +183,19 @@ class Sprite_Card extends Sprite {
         }
     }
 
+    drawShadow() {
+        if(this.isInactive()) {
+            this._shadow.opacity = 128;
+        } else {
+            this._shadow.opacity = 0;
+        }
+    }
+
     drawSelect() {
         if(this.isSelected()) {
-            this.addChildAt(this._select, this._layers.selected);
+            this._select.opacity = 255;
         } else {
-            this.removeChildAt(this._layers.selected);
+            this._select.opacity = 0;
         }
     }
 
