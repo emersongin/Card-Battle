@@ -43,8 +43,12 @@ class Scene_CardBattle extends Scene_Base {
         cards.forEach(card => sprites.push(new Sprite_Card(card)));
         sprites.forEach((sprite, index) => {
             sprite.move(index * sprite.width, 0);
-            // sprite.close();
-            sprite.open();
+            sprite.addActions([
+                {type: '_ANIMATION', params: [1]},
+                {type: '_CLOSE'},
+                {type: '_FACEDOWN'},
+                {type: '_OPEN'},
+            ]);
             this.addChild(sprite);
         });
 

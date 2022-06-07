@@ -2,7 +2,8 @@
 /data
 /fonts
 /icon
-/img
+/img/*
+!/img/battlecards
 /move
 /node_modules
 /js/*

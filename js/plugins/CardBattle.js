@@ -92,7 +92,7 @@ class Game_Card {
     }
 }
 
-class Sprite_Card extends Sprite {
+class Sprite_Card extends Sprite_Base {
     constructor(Game_Card) {
         super();
 
@@ -104,22 +104,29 @@ class Sprite_Card extends Sprite {
         this._face = Game_Card.getFace();
         this._selected = Game_Card.getSelected();
         this._file = Game_Card.getFile() || 'index';
-        this._openness = true;
-
+        // mirrors
         this._mirrorAP = Game_Card.getAP() || 0;
         this._mirrorHP = Game_Card.getHP() || 0;
         this._mirrorX = this.x;
         this._mirrorY = this.y;
         this._mirrorScaleX = this.scale.x;
         this._mirrorScaleY = this.scale.y;
-
+        // frames
         this._frameCounter = 0;
         this._frameInterval = 0;
+        // behaviors
         this._pointsSpeed = 2;
+        this._openness = true;
+        
+        this._actions = [];
 
         this.initialize();
         this.setFrame(0, 0, this.cardWidth(), this.cardHeight());
 
+    }
+
+    hasActions() {
+        return this._actions.length > 0;
     }
 
     notEquals(value, mirror) {
@@ -142,28 +149,30 @@ class Sprite_Card extends Sprite {
         return this._openness === false;
     }
 
-    open() {
-        if (this.isClose()) {
-            this._mirrorX = this.x - (this.width / 2);
+    open(force = false) {
+        if (this.isClose() || force) {
+            this._mirrorX = this.x - (this.cardWidth() / 2);
             this._mirrorScaleX = 1;
-            this.setTimeMove(2);
         }
     }
     
-    close() {
-        if (this.isOpen()) {
-            this._mirrorX = this.x + (this.width / 2);
+    close(force = false) {
+        if (this.isOpen() || force) {
+            this._mirrorX = this.x + (this.cardWidth() / 2);
             this._mirrorScaleX = 0;
-            this.setTimeMove(2);
         }
     }
 
     setTimeMove(times) {
-        this._frameInterval = 8 * times;
+        this._frameInterval = 0.06 * times;
     }
 
     itsMoving() {
         return this._frameInterval;
+    }
+
+    waiting() {
+        return this._frameInterval <= 0;
     }
 
     setRange(value, mirror) {
@@ -272,13 +281,17 @@ class Sprite_Card extends Sprite {
     }
 
     createFigure() {
-        // size card figure 96x96
+        // size card figure 96x96 and facedown 102x124
 
-        this._figure.move(3, 3);
-        this._figure.bitmap = ImageManager.loadBattlecards(this._file);
-        
-        // @tests
-        // this._figure.bitmap.fillAll('red');
+        if(this.isFaceUp()) {
+            this._figure.move(3, 3);
+            this._figure.bitmap = ImageManager.loadBattlecards(this._file);
+
+        } else {
+            this._figure.move(2, 2);
+            this._figure.bitmap = ImageManager.loadBattlecards('facedown');
+
+        }
 
     }
 
@@ -308,12 +321,23 @@ class Sprite_Card extends Sprite {
             this.drawSelect();
 
         } else {
-            //faceDown
+            this.clearCaption();
+            this.createFigure();
+
         }
     }
 
     isFaceUp() {
         return this._face === true;
+    }
+
+    turnFace(force) {
+        if (this.isFaceUp()) {
+            this._face = false;
+        } else {
+            this._face = true;
+        }
+        this._face = force === null ? this._face :  force;
     }
 
     drawType() {
@@ -327,7 +351,7 @@ class Sprite_Card extends Sprite {
     }
 
     drawShadow() {
-        if(this.isInactive()) {
+        if(this.isInactive() && this.isFaceUp()) {
             this._shadow.opacity = 128;
         } else {
             this._shadow.opacity = 0;
@@ -335,7 +359,7 @@ class Sprite_Card extends Sprite {
     }
 
     drawSelect() {
-        if(this.isSelected()) {
+        if(this.isSelected() && this.isFaceUp()) {
             this._select.opacity = 255;
         } else {
             this._select.opacity = 0;
@@ -343,18 +367,25 @@ class Sprite_Card extends Sprite {
     }
 
     drawCaption(caption) {
-        this._caption.bitmap.clear();
+        this.clearCaption();
         this._caption.bitmap.drawText(
             `${caption}`, 0, 0, this.cardWidth(), 24, 'center'
         );
     }
 
+    clearCaption() {
+        this._caption.bitmap.clear();
+    }
+
     update() {
         super.update();
+
+        this.updateMovement();
+        this.updateOpenAndClose();
+
+        this.updateActions();
         this.updatePoints();
         this.updateSelected();
-        this.updateOpenAndClose();
-        this.updateMovement();
 
         this._frameCounter++;
     }
@@ -410,6 +441,120 @@ class Sprite_Card extends Sprite {
         }
     }
 
+    updateActions() {
+        if (this.hasActions() && this.waiting()) {
+            let action = this._actions.shift();
+
+            this.takeAction(action);
+        }
+    }
+
+    addActions(actions = []) {
+        if(Array.isArray(actions)) {
+            this._actions = [...this._actions, ...actions];
+        } else {
+            this._actions.push(action);
+        }
+    }
+
+    takeAction(Action) {
+        switch (Action.type) {
+            case '_OPEN':
+                Action.duration = 200;
+
+                this.open();
+                break;
+            case '_CLOSE':
+                Action.duration = 200;
+
+                this.close();
+                break;
+            case '_FACEUP':
+                this.turnFace(true);
+                this.refresh();
+                break;
+            case '_FACEDOWN':
+                this.turnFace(false);
+                this.refresh();
+                break;
+            case '_REFRESH':
+                this.refresh();
+                break;
+            case '_ANIMATION':
+                let animation = $dataAnimations[Action.params[0]];
+                let duration = ((((animation.frames.length * 4) + 1) * 1000) / 60);
+
+                Action.duration = duration;
+
+                this.startAnimation($dataAnimations[Action.params[0]]);
+
+                break;
+            case '_WAIT':
+                break;
+            // case 'PLUS':
+            //     this.plus(action.times);
+            //     break;
+            // case 'LESS':
+            //     this.less(action.times);
+            //     break;
+            // case 'MOVE_UP':
+            //     this.up(action.times);
+            //     break;
+            // case 'MOVE_DOWN':
+            //     this.down(action.times);
+            //     break;
+            // case 'MOVE_LEFT':
+            //     this.left(action.times);
+            //     break;
+            // case 'MOVE_RIGHT':
+            //     this.right(action.times);
+            //     break;
+            // case 'SELECT':
+            //     this.select();
+            //     break;
+            // case 'UNSELECT':
+            //     this.unselect();
+            //     break;
+            // case 'LIKE':
+            //     this.like();
+            //     break;
+            // case 'UNLIKE':
+            //     this.unlike();
+            //     break;
+            // case 'TAKE':
+            //     this.take();
+            //     break;
+            // case 'UNTAKE':
+            //     this.untake();
+            //     break;
+            // case 'ENABLE':
+            //     this.enable();
+            //     break;
+            // case 'DISABLE':
+            //     this.disable();
+            //     break;
+            // case 'TRIGGERED':
+            //     this.triggered();
+            //     break;
+            // case 'NOT_TRIGGERED':
+            //     this.notTriggered();
+            //     break;
+            // case 'BLOCK':
+            //     this.block();
+            //     break;
+            // case 'UNBLOCK':
+            //     this.unblock();
+            //     break;
+            // case 'ATTACK':
+            //     this.setAttack(action.points);
+            //     break;
+            // case 'HEALTH':
+            //     this.setHealth(action.points);
+            //     break;
+        }
+
+        this.setTimeMove(Action.duration || 1);
+    }
     // updateReverse() {
     //     if(this._reversalInterval) {
     //         let frame = this._reversalInterval;
@@ -901,8 +1046,12 @@ class Scene_CardBattle extends Scene_Base {
         cards.forEach(card => sprites.push(new Sprite_Card(card)));
         sprites.forEach((sprite, index) => {
             sprite.move(index * sprite.width, 0);
-            // sprite.close();
-            sprite.open();
+            sprite.addActions([
+                {type: '_ANIMATION', params: [1]},
+                {type: '_CLOSE'},
+                {type: '_FACEDOWN'},
+                {type: '_OPEN'},
+            ]);
             this.addChild(sprite);
         });
 
