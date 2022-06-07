@@ -53,7 +53,7 @@ class Game_Card {
         this._type = Card.type;
         this._file = Card.file;
         //
-        this._state = false;
+        this._state = true;
         this._face = true;
         this._selected = false;
 
@@ -101,14 +101,20 @@ class Sprite_Card extends Sprite {
         this._color = Game_Card.getColor() || Game_CardColor.BROWN;
         this._type = Game_Card.getType() || Game_CardType.NONE;
         this._state = Game_Card.getState();
-        this._face = Game_Card.getFace() || true;
+        this._face = Game_Card.getFace();
         this._selected = Game_Card.getSelected();
         this._file = Game_Card.getFile() || 'index';
+        this._openness = true;
 
         this._mirrorAP = Game_Card.getAP() || 0;
         this._mirrorHP = Game_Card.getHP() || 0;
+        this._mirrorX = this.x;
+        this._mirrorY = this.y;
+        this._mirrorScaleX = this.scale.x;
+        this._mirrorScaleY = this.scale.y;
 
         this._frameCounter = 0;
+        this._frameInterval = 0;
         this._pointsSpeed = 2;
 
         this.initialize();
@@ -116,12 +122,55 @@ class Sprite_Card extends Sprite {
 
     }
 
-    isInactive() { console.log(this._state === false, this._state, false);
+    notEquals(value, mirror) {
+        return value !== mirror;
+    }
+
+    isInactive() {
         return this._state === false;
     }
 
     isSelected() {
         return this._selected === true;
+    }
+
+    isOpen() {
+        return this._openness;
+    }
+    
+    isClose() {
+        return this._openness === false;
+    }
+
+    open() {
+        if (this.isClose()) {
+            this._mirrorX = this.x - (this.width / 2);
+            this._mirrorScaleX = 1;
+            this.setTimeMove(2);
+        }
+    }
+    
+    close() {
+        if (this.isOpen()) {
+            this._mirrorX = this.x + (this.width / 2);
+            this._mirrorScaleX = 0;
+            this.setTimeMove(2);
+        }
+    }
+
+    setTimeMove(times) {
+        this._frameInterval = 8 * times;
+    }
+
+    itsMoving() {
+        return this._frameInterval;
+    }
+
+    setRange(value, mirror) {
+        if (this.notEquals(value, mirror)) {
+            return (value * (this._frameInterval - 1) + mirror) / this._frameInterval;
+        }
+        return value;
     }
 
     cardWidth() {
@@ -193,7 +242,7 @@ class Sprite_Card extends Sprite {
         context.lineWidth = cornerRadius;
         context.strokeStyle = color;
         context.strokeRect(
-            rectX + (cornerRadius/2), rectY + (cornerRadius/2), 
+            rectX + (cornerRadius / 2), rectY + (cornerRadius / 2), 
             rectWidth - cornerRadius, rectHeight - cornerRadius
         );
 
@@ -304,12 +353,14 @@ class Sprite_Card extends Sprite {
         super.update();
         this.updatePoints();
         this.updateSelected();
+        this.updateOpenAndClose();
+        this.updateMovement();
 
         this._frameCounter++;
     }
 
     updatePoints() {
-        if(this._mirrorAP !== this._AP || this._mirrorHP !== this._HP) {
+        if(this._mirrorAP !== this._AP || this._mirrorHP !== this._HP && this.isOpen()) {
             let speed = this._pointsSpeed || 1;
 
             for (let times = 1; times <= speed; times++) {
@@ -335,11 +386,47 @@ class Sprite_Card extends Sprite {
     }
 
     updateSelected() {
-        if(this.isSelected() && this._frameCounter % 8 == 0) {
+        if(this.isSelected() && this.isOpen() && this._frameCounter % 8 == 0) {
             this._select.opacity = this._select.opacity == 255 ? 228 : 255;
         }
 
     }
+
+    updateOpenAndClose() {
+        if (this.scale.x === 1 && this.isClose()) {
+            this._openness = true;
+        } else if (this.scale.x === 0 && this.isOpen()) {
+            this._openness = false;
+        }
+    }
+
+    updateMovement() {
+        if (this.itsMoving()) {
+            this.x = this.setRange(this.x, this._mirrorX);
+            this.y = this.setRange(this.y, this._mirrorY);
+            this.scale.x = this.setRange(this.scale.x, this._mirrorScaleX);
+            this.scale.y = this.setRange(this.scale.y, this._mirrorScaleY);
+            this._frameInterval--;
+        }
+    }
+
+    // updateReverse() {
+    //     if(this._reversalInterval) {
+    //         let frame = this._reversalInterval;
+
+    //         if(frame < 20) {
+    //             // this.x = ((this.x * (frame - 1)) + 0) / frame;
+    //             this.scale.x = (1 * (frame - 1)) / frame;
+    
+    //         } else {
+    //             // this.x = ((this.x * ((frame - 20) - 1)) + (this.width / 2)) / (frame - 20);
+    //             this.scale.x = (0 * ((frame - 20) - 1)) / (frame - 20);
+    
+    //         }
+
+    //         this._reversalInterval--;
+    //     }
+    // }
 
 }
 
@@ -814,6 +901,8 @@ class Scene_CardBattle extends Scene_Base {
         cards.forEach(card => sprites.push(new Sprite_Card(card)));
         sprites.forEach((sprite, index) => {
             sprite.move(index * sprite.width, 0);
+            // sprite.close();
+            sprite.open();
             this.addChild(sprite);
         });
 
