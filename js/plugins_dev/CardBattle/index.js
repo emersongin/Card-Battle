@@ -14,9 +14,11 @@
 (function() {
 // include ./ImageManager.js
 // include ./Game_CardColor.js
+// include ./Game_Colorset.js
 // include ./Game_CardType.js
 // include ./Game_Card.js
 // include ./Sprite_Card.js
+// include ./Sprite_Cardset.js
 // include ./Sprite_Background.js
 // include ./Sprite_Intro.js
 // include ./Spriteset_CardBattle.js 

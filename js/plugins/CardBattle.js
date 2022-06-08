@@ -35,6 +35,44 @@ Game_CardColor.RED = "red";
 Game_CardColor.BLACK = "black";
 Game_CardColor.BROWN = "brown";
 
+class Game_Colorset {
+    constructor(Colors = {}) {
+        this._white = Colors.white || 0;
+        this._blue = Colors.blue || 0;
+        this._green = Colors.green || 0;
+        this._red = Colors.red || 0;
+        this._black = Colors.black || 0;
+
+    }
+
+    hasPoints(color, max) {
+        if(color === 'brown') return false;
+
+        return this['_' + color] >= max;
+    }
+
+    getWhitePoints() {
+        this._white;
+    }
+
+    getBluePoints() {
+        this._blue;
+    }
+
+    getGreenPoints() {
+        this._green;
+    }
+
+    getRedPoints() {
+        this._red;
+    }
+
+    getBlackPoints() {
+        this._black;
+    }
+
+}
+
 function Game_CardType() {
     throw new Error('This is a static class');
 }
@@ -52,11 +90,19 @@ class Game_Card {
         this._color = Card.color;
         this._type = Card.type;
         this._file = Card.file;
-        //
-        this._state = true;
-        this._face = true;
-        this._selected = false;
+        this._cost = Card.cost || 0;
 
+
+    }
+
+    reset() {
+        this._AP = this._card.ap;
+        this._HP = this._card.hp;
+        this._color = this._card.color;
+        this._type = this._card.type;
+        this._file = this._card.file;
+        this._cost = this._card.cost;
+        
     }
 
     getAP() {
@@ -75,35 +121,32 @@ class Game_Card {
         return this._type;
     }
     
-    getFace() {
-        return this._face;
-    }
-
-    getSelected() {
-        return this._selected;
-    }
-    
-    getState() {
-        return this._state;
-    }
-
     getFile() {
         return this._file;
     }
+
+    getCost() {
+        return this._cost;
+    }
+
 }
 
 class Sprite_Card extends Sprite_Base {
     constructor(Game_Card) {
         super();
 
+        // attributes
         this._AP = Game_Card.getAP() || 0;
         this._HP = Game_Card.getHP() || 0;
         this._color = Game_Card.getColor() || Game_CardColor.BROWN;
         this._type = Game_Card.getType() || Game_CardType.NONE;
-        this._state = Game_Card.getState();
-        this._face = Game_Card.getFace();
-        this._selected = Game_Card.getSelected();
         this._file = Game_Card.getFile() || 'index';
+
+        // initial states
+        this._state = false;
+        this._face = false;
+        this._selected = false;
+        
         // mirrors
         this._mirrorAP = Game_Card.getAP() || 0;
         this._mirrorHP = Game_Card.getHP() || 0;
@@ -111,13 +154,16 @@ class Sprite_Card extends Sprite_Base {
         this._mirrorY = this.y;
         this._mirrorScaleX = this.scale.x;
         this._mirrorScaleY = this.scale.y;
-        // frames
+
+        // counters
         this._frameCounter = 0;
         this._frameInterval = 0;
+
         // behaviors
         this._pointsSpeed = 2;
         this._openness = true;
-        
+
+        // observers
         this._actions = [];
 
         this.initialize();
@@ -321,6 +367,8 @@ class Sprite_Card extends Sprite_Base {
             this.drawSelect();
 
         } else {
+            this.drawShadow();
+            this.drawSelect();
             this.clearCaption();
             this.createFigure();
 
@@ -461,21 +509,17 @@ class Sprite_Card extends Sprite_Base {
         switch (Action.type) {
             case '_OPEN':
                 Action.duration = 200;
-
                 this.open();
                 break;
             case '_CLOSE':
                 Action.duration = 200;
-
                 this.close();
                 break;
             case '_FACEUP':
                 this.turnFace(true);
-                this.refresh();
                 break;
             case '_FACEDOWN':
                 this.turnFace(false);
-                this.refresh();
                 break;
             case '_REFRESH':
                 this.refresh();
@@ -483,11 +527,8 @@ class Sprite_Card extends Sprite_Base {
             case '_ANIMATION':
                 let animation = $dataAnimations[Action.params[0]];
                 let duration = ((((animation.frames.length * 4) + 1) * 1000) / 60);
-
                 Action.duration = duration;
-
                 this.startAnimation($dataAnimations[Action.params[0]]);
-
                 break;
             case '_WAIT':
                 break;
@@ -572,6 +613,55 @@ class Sprite_Card extends Sprite_Base {
     //         this._reversalInterval--;
     //     }
     // }
+
+}
+
+class Sprite_Cardset extends Sprite {
+    constructor(Config) {
+        super();
+
+        this._cards = Config.cards || [];
+        this._sprites = [];
+        this._selections = [];
+        this._colors = new Game_Colorset(Config.colors);
+
+        // sistem
+        this._selectionColorsCost = Config.selectionColorsCost || false;
+        this._enableSelect = Config.enableSelect || false;
+        this._selectionsNumber = Config.selectionsNumber || 0;
+
+        this.initialize();
+    }
+
+    initialize() {
+        super.initialize();
+
+    }
+
+    clearSprites() {
+        if(this.children.length) {
+            for (const child of this.children) {
+                this.removeChild(child);
+            }
+        }
+
+        this._sprites = [];
+    }
+
+    refreshSprites() {
+        this.clearSprites();
+
+        if(this._cards.length) {
+            this._sprites = this._cards.map(card => new Sprite_Card(card));
+
+            if(this._sprites.length) {
+                this._sprites.forEach((sprite, index) => {
+                    sprite.move(index * sprite.width + 12, 0);
+                    this.addChild(sprite);
+                });
+            }
+        }
+    }
 
 }
 
@@ -1033,27 +1123,24 @@ class Scene_CardBattle extends Scene_Base {
     testCardBattle() {
         let cards = [
             new Game_Card({ap: 99,hp: 99,color: Game_CardColor.WHITE,type: Game_CardType.BATTLE, file: 'example'}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLUE,type: Game_CardType.POWER, file: 'example'}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.GREEN,type: Game_CardType.NONE, file: 'example'}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.RED,type: Game_CardType.BATTLE, file: 'example'}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLACK,type: Game_CardType.BATTLE, file: 'example'}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BROWN,type: Game_CardType.BATTLE, file: 'example'}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.GREEN,type: Game_CardType.NONE, file: 'example'}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.RED,type: Game_CardType.BATTLE, file: 'example'}),
+            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLUE,type: Game_CardType.POWER, file: 'example'}),
+            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.GREEN,type: Game_CardType.NONE, file: 'example'}),
+            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.RED,type: Game_CardType.BATTLE, file: 'example'}),
+            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLACK,type: Game_CardType.BATTLE, file: 'example'}),
+            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BROWN,type: Game_CardType.BATTLE, file: 'example'}),
         ];
-        let sprites = [];
+        let cardSet = new Sprite_Cardset({ cards });
 
-        cards.forEach(card => sprites.push(new Sprite_Card(card)));
-        sprites.forEach((sprite, index) => {
-            sprite.move(index * sprite.width, 0);
-            sprite.addActions([
-                {type: '_ANIMATION', params: [1]},
-                {type: '_CLOSE'},
-                {type: '_FACEDOWN'},
-                {type: '_OPEN'},
-            ]);
-            this.addChild(sprite);
-        });
+        this.addChild(cardSet);
+        
+        cardSet.refreshSprites();
+
+        // sprite.addActions([
+        //     { type: '_WAIT', duration: 2000 },
+        //     { type: '_CLOSE' },
+        //     { type: '_FACEDOWN' },
+        //     { type: '_OPEN' },
+        // ]);
 
     }
 

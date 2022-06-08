@@ -7,11 +7,19 @@ class Game_Card {
         this._color = Card.color;
         this._type = Card.type;
         this._file = Card.file;
-        //
-        this._state = true;
-        this._face = true;
-        this._selected = false;
+        this._cost = Card.cost || 0;
 
+
+    }
+
+    reset() {
+        this._AP = this._card.ap;
+        this._HP = this._card.hp;
+        this._color = this._card.color;
+        this._type = this._card.type;
+        this._file = this._card.file;
+        this._cost = this._card.cost;
+        
     }
 
     getAP() {
@@ -30,19 +38,12 @@ class Game_Card {
         return this._type;
     }
     
-    getFace() {
-        return this._face;
-    }
-
-    getSelected() {
-        return this._selected;
-    }
-    
-    getState() {
-        return this._state;
-    }
-
     getFile() {
         return this._file;
     }
+
+    getCost() {
+        return this._cost;
+    }
+
 }

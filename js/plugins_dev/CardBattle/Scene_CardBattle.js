@@ -30,27 +30,24 @@ class Scene_CardBattle extends Scene_Base {
     testCardBattle() {
         let cards = [
             new Game_Card({ap: 99,hp: 99,color: Game_CardColor.WHITE,type: Game_CardType.BATTLE, file: 'example'}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLUE,type: Game_CardType.POWER, file: 'example'}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.GREEN,type: Game_CardType.NONE, file: 'example'}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.RED,type: Game_CardType.BATTLE, file: 'example'}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLACK,type: Game_CardType.BATTLE, file: 'example'}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BROWN,type: Game_CardType.BATTLE, file: 'example'}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.GREEN,type: Game_CardType.NONE, file: 'example'}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.RED,type: Game_CardType.BATTLE, file: 'example'}),
+            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLUE,type: Game_CardType.POWER, file: 'example'}),
+            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.GREEN,type: Game_CardType.NONE, file: 'example'}),
+            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.RED,type: Game_CardType.BATTLE, file: 'example'}),
+            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLACK,type: Game_CardType.BATTLE, file: 'example'}),
+            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BROWN,type: Game_CardType.BATTLE, file: 'example'}),
         ];
-        let sprites = [];
+        let cardSet = new Sprite_Cardset({ cards });
 
-        cards.forEach(card => sprites.push(new Sprite_Card(card)));
-        sprites.forEach((sprite, index) => {
-            sprite.move(index * sprite.width, 0);
-            sprite.addActions([
-                {type: '_ANIMATION', params: [1]},
-                {type: '_CLOSE'},
-                {type: '_FACEDOWN'},
-                {type: '_OPEN'},
-            ]);
-            this.addChild(sprite);
-        });
+        this.addChild(cardSet);
+        
+        cardSet.refreshSprites();
+
+        // sprite.addActions([
+        //     { type: '_WAIT', duration: 2000 },
+        //     { type: '_CLOSE' },
+        //     { type: '_FACEDOWN' },
+        //     { type: '_OPEN' },
+        // ]);
 
     }
 

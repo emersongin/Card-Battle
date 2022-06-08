@@ -2,14 +2,18 @@ class Sprite_Card extends Sprite_Base {
     constructor(Game_Card) {
         super();
 
+        // attributes
         this._AP = Game_Card.getAP() || 0;
         this._HP = Game_Card.getHP() || 0;
         this._color = Game_Card.getColor() || Game_CardColor.BROWN;
         this._type = Game_Card.getType() || Game_CardType.NONE;
-        this._state = Game_Card.getState();
-        this._face = Game_Card.getFace();
-        this._selected = Game_Card.getSelected();
         this._file = Game_Card.getFile() || 'index';
+
+        // initial states
+        this._state = false;
+        this._face = false;
+        this._selected = false;
+        
         // mirrors
         this._mirrorAP = Game_Card.getAP() || 0;
         this._mirrorHP = Game_Card.getHP() || 0;
@@ -17,13 +21,16 @@ class Sprite_Card extends Sprite_Base {
         this._mirrorY = this.y;
         this._mirrorScaleX = this.scale.x;
         this._mirrorScaleY = this.scale.y;
-        // frames
+
+        // counters
         this._frameCounter = 0;
         this._frameInterval = 0;
+
         // behaviors
         this._pointsSpeed = 2;
         this._openness = true;
-        
+
+        // observers
         this._actions = [];
 
         this.initialize();
@@ -227,6 +234,8 @@ class Sprite_Card extends Sprite_Base {
             this.drawSelect();
 
         } else {
+            this.drawShadow();
+            this.drawSelect();
             this.clearCaption();
             this.createFigure();
 
@@ -367,21 +376,17 @@ class Sprite_Card extends Sprite_Base {
         switch (Action.type) {
             case '_OPEN':
                 Action.duration = 200;
-
                 this.open();
                 break;
             case '_CLOSE':
                 Action.duration = 200;
-
                 this.close();
                 break;
             case '_FACEUP':
                 this.turnFace(true);
-                this.refresh();
                 break;
             case '_FACEDOWN':
                 this.turnFace(false);
-                this.refresh();
                 break;
             case '_REFRESH':
                 this.refresh();
@@ -389,11 +394,8 @@ class Sprite_Card extends Sprite_Base {
             case '_ANIMATION':
                 let animation = $dataAnimations[Action.params[0]];
                 let duration = ((((animation.frames.length * 4) + 1) * 1000) / 60);
-
                 Action.duration = duration;
-
                 this.startAnimation($dataAnimations[Action.params[0]]);
-
                 break;
             case '_WAIT':
                 break;
