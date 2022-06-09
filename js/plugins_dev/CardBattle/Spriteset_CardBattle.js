@@ -4,10 +4,11 @@ class Spriteset_CardBattle extends Spriteset_Base {
     }
 
     initialize() {
+        super.initialize();
+
         this._backgroundSnap = null;
         this._background = null;
         this._layerIntro = null;
-        super.initialize();
 
     }
 

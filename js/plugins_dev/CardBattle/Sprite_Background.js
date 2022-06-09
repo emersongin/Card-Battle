@@ -1,15 +1,16 @@
 class Sprite_Background extends Sprite {
-    constructor() {
-        super();
+    constructor(Bitmap) {
+        super(Bitmap);
     }
 
-    initialize() {
+    initialize(Bitmap) {
+        super.initialize();
+
         this._active = false;
         this._sprites = [];
         this._limite = 624;
         this._speed = 1;
 
-        super.initialize();
         this.createSpritesParallax();
 
     }

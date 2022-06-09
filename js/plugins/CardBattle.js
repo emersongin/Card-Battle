@@ -133,7 +133,12 @@ class Game_Card {
 
 class Sprite_Card extends Sprite_Base {
     constructor(Game_Card) {
-        super();
+        super(Game_Card);
+
+    }
+
+    initialize(Game_Card) {
+        super.initialize();
 
         // attributes
         this._AP = Game_Card.getAP() || 0;
@@ -143,6 +148,8 @@ class Sprite_Card extends Sprite_Base {
         this._file = Game_Card.getFile() || 'index';
 
         // initial states
+        this._hiding = true;
+        this._openness = false
         this._state = false;
         this._face = false;
         this._selected = false;
@@ -158,16 +165,17 @@ class Sprite_Card extends Sprite_Base {
         // counters
         this._frameCounter = 0;
         this._frameInterval = 0;
+        this._frameMoving = 0;
 
         // behaviors
         this._pointsSpeed = 2;
-        this._openness = true;
 
         // observers
         this._actions = [];
 
-        this.initialize();
         this.setFrame(0, 0, this.cardWidth(), this.cardHeight());
+        this.setup();
+        this.createLayers();
 
     }
 
@@ -180,11 +188,11 @@ class Sprite_Card extends Sprite_Base {
     }
 
     isInactive() {
-        return this._state === false;
+        return !this._state;
     }
 
     isSelected() {
-        return this._selected === true;
+        return this._selected;
     }
 
     isOpen() {
@@ -192,7 +200,7 @@ class Sprite_Card extends Sprite_Base {
     }
     
     isClose() {
-        return this._openness === false;
+        return !this._openness;
     }
 
     open(force = false) {
@@ -210,22 +218,42 @@ class Sprite_Card extends Sprite_Base {
     }
 
     setTimeMove(times) {
+        this._frameMoving = 0.06 * times;
+    }
+
+    setTimeInterval(times) {
         this._frameInterval = 0.06 * times;
     }
 
-    itsMoving() {
+    itsBusy() {
         return this._frameInterval;
     }
 
-    waiting() {
+    notBusy() {
         return this._frameInterval <= 0;
     }
 
-    setRange(value, mirror) {
+    itsMoving() {
+        return this._frameMoving;
+    }
+
+    waiting() {
+        return this._frameMoving <= 0;
+    }
+
+    setRangeMove(value, mirror) {
         if (this.notEquals(value, mirror)) {
-            return (value * (this._frameInterval - 1) + mirror) / this._frameInterval;
+            return (value * (this._frameMoving - 1) + mirror) / this._frameMoving;
         }
-        return value;
+        return parseFloat(value);
+    }
+
+    setRangeMoveInt(value, mirror) {
+        return parseInt(this.setRangeMove(value, mirror));
+    }
+
+    setRangeMoveFloat(value, mirror) {
+        return parseFloat(this.setRangeMove(value, mirror));
     }
 
     cardWidth() {
@@ -234,14 +262,6 @@ class Sprite_Card extends Sprite_Base {
 
     cardHeight() {
         return 124;
-    }
-
-    initialize() {
-        super.initialize();
-        this.setup();
-        this.createLayers();
-        this.refresh();
-
     }
 
     setup() {
@@ -263,7 +283,6 @@ class Sprite_Card extends Sprite_Base {
         };
 
         this.createBackground();
-        this.createFigure();
         this.createCaption();
         this.createShadow();
         this.createSelected();
@@ -326,21 +345,6 @@ class Sprite_Card extends Sprite_Base {
         }
     }
 
-    createFigure() {
-        // size card figure 96x96 and facedown 102x124
-
-        if(this.isFaceUp()) {
-            this._figure.move(3, 3);
-            this._figure.bitmap = ImageManager.loadBattlecards(this._file);
-
-        } else {
-            this._figure.move(2, 2);
-            this._figure.bitmap = ImageManager.loadBattlecards('facedown');
-
-        }
-
-    }
-
     createCaption() {
         this._caption.move(0, this.cardHeight() - 24);
         this._caption.bitmap.fontSize = 14;
@@ -360,32 +364,44 @@ class Sprite_Card extends Sprite_Base {
 
     }
 
+    isShow() {
+        return this.visible;
+    }
+
     refresh() {
         if (this.isFaceUp()) {
             this.drawType();
             this.drawShadow();
             this.drawSelect();
+            this.drawFigure();
 
         } else {
+            this.clearCaption();
             this.drawShadow();
             this.drawSelect();
-            this.clearCaption();
-            this.createFigure();
+            this.drawCover();
 
         }
     }
 
     isFaceUp() {
-        return this._face === true;
+        return this._face;
     }
 
-    turnFace(force) {
-        if (this.isFaceUp()) {
-            this._face = false;
-        } else {
-            this._face = true;
-        }
-        this._face = force === null ? this._face :  force;
+    active() {
+        this._state = true;
+    }
+
+    inactive() {
+        this._state = false;
+    }
+
+    turnFaceUp() {
+        this._face = true;
+    }
+
+    turnFaceDown() {
+        this._face = false;
     }
 
     drawType() {
@@ -399,7 +415,7 @@ class Sprite_Card extends Sprite_Base {
     }
 
     drawShadow() {
-        if(this.isInactive() && this.isFaceUp()) {
+        if(this.isInactive()) {
             this._shadow.opacity = 128;
         } else {
             this._shadow.opacity = 0;
@@ -407,7 +423,7 @@ class Sprite_Card extends Sprite_Base {
     }
 
     drawSelect() {
-        if(this.isSelected() && this.isFaceUp()) {
+        if(this.isSelected()) {
             this._select.opacity = 255;
         } else {
             this._select.opacity = 0;
@@ -425,9 +441,24 @@ class Sprite_Card extends Sprite_Base {
         this._caption.bitmap.clear();
     }
 
+    drawFigure() {
+        // size card figure 96x96 
+        this._figure.move(3, 3);
+        this._figure.bitmap = ImageManager.loadBattlecards(this._file);
+
+    }
+
+    drawCover() {
+        // size card cover 102x124
+
+        this._figure.move(2, 2);
+        this._figure.bitmap = ImageManager.loadBattlecards('facedown');
+    }
+
     update() {
         super.update();
 
+        this.updateInterval();
         this.updateMovement();
         this.updateOpenAndClose();
 
@@ -479,18 +510,22 @@ class Sprite_Card extends Sprite_Base {
         }
     }
 
+    updateInterval() {
+        if (this.itsBusy()) this._frameInterval--;
+    }
+
     updateMovement() {
         if (this.itsMoving()) {
-            this.x = this.setRange(this.x, this._mirrorX);
-            this.y = this.setRange(this.y, this._mirrorY);
-            this.scale.x = this.setRange(this.scale.x, this._mirrorScaleX);
-            this.scale.y = this.setRange(this.scale.y, this._mirrorScaleY);
-            this._frameInterval--;
+            this.x = this.setRangeMoveInt(this.x, this._mirrorX);
+            this.y = this.setRangeMoveInt(this.y, this._mirrorY);
+            this.scale.x = this.setRangeMoveFloat(this.scale.x, this._mirrorScaleX);
+            this.scale.y = this.setRangeMoveFloat(this.scale.y, this._mirrorScaleY);
+            this._frameMoving--;
         }
     }
 
     updateActions() {
-        if (this.hasActions() && this.waiting()) {
+        if (this.hasActions() && this.waiting() && this.notBusy()) {
             let action = this._actions.shift();
 
             this.takeAction(action);
@@ -506,20 +541,35 @@ class Sprite_Card extends Sprite_Base {
     }
 
     takeAction(Action) {
+        console.log(this._openness, this.isClose(), this._mirrorX, this.scale.x);
+
         switch (Action.type) {
+            case '_SHOW':
+                this.show();
+                break;
+            case '_HIDE':
+                this.hide();
+                break;
             case '_OPEN':
                 Action.duration = 200;
                 this.open();
+                this.setTimeMove(Action.duration || 100);
                 break;
             case '_CLOSE':
                 Action.duration = 200;
                 this.close();
                 break;
+            case '_ACTIVE':
+                this.active();
+                break;
+            case '_INACTIVE':
+                this.inactive();
+                break;
             case '_FACEUP':
-                this.turnFace(true);
+                this.turnFaceUp();
                 break;
             case '_FACEDOWN':
-                this.turnFace(false);
+                this.turnFaceDown();
                 break;
             case '_REFRESH':
                 this.refresh();
@@ -594,47 +644,54 @@ class Sprite_Card extends Sprite_Base {
             //     break;
         }
 
-        this.setTimeMove(Action.duration || 1);
+        this.setTimeInterval(Action.duration || 1);
     }
-    // updateReverse() {
-    //     if(this._reversalInterval) {
-    //         let frame = this._reversalInterval;
-
-    //         if(frame < 20) {
-    //             // this.x = ((this.x * (frame - 1)) + 0) / frame;
-    //             this.scale.x = (1 * (frame - 1)) / frame;
-    
-    //         } else {
-    //             // this.x = ((this.x * ((frame - 20) - 1)) + (this.width / 2)) / (frame - 20);
-    //             this.scale.x = (0 * ((frame - 20) - 1)) / (frame - 20);
-    
-    //         }
-
-    //         this._reversalInterval--;
-    //     }
-    // }
 
 }
 
 class Sprite_Cardset extends Sprite {
     constructor(Config) {
-        super();
+        super(Config);
+
+    }
+
+    initialize(Config) {
+        super.initialize();
 
         this._cards = Config.cards || [];
         this._sprites = [];
         this._selections = [];
         this._colors = new Game_Colorset(Config.colors);
 
-        // sistem
+        // config actions
+        this._activete = Config.active || true;
         this._selectionColorsCost = Config.selectionColorsCost || false;
         this._enableSelect = Config.enableSelect || false;
         this._selectionsNumber = Config.selectionsNumber || 0;
 
-        this.initialize();
+        this.setup();
+
     }
 
-    initialize() {
-        super.initialize();
+    contentSize() {
+        return 102 * 6;
+    }
+    
+    paddingBetween() {
+        return 2;
+    }
+
+    setup() {
+        this.clearSprites();
+        this.createSprites();
+        this.addSprites();
+    }
+
+    initialCardsPosition() {
+
+    }
+
+    initialCardsStates() {
 
     }
 
@@ -648,35 +705,76 @@ class Sprite_Cardset extends Sprite {
         this._sprites = [];
     }
 
-    refreshSprites() {
-        this.clearSprites();
+    cardsAmount() {
+        return this._cards.length;
+    }
 
-        if(this._cards.length) {
-            this._sprites = this._cards.map(card => new Sprite_Card(card));
+    spritesAmount() {
+        return this._sprites.length;
+    }
 
-            if(this._sprites.length) {
-                this._sprites.forEach((sprite, index) => {
-                    sprite.move(index * sprite.width + 12, 0);
-                    this.addChild(sprite);
-                });
-            }
+    createSprites() {
+        if(this.cardsAmount()) {
+            this._sprites = this._cards.map((card, index) => { 
+                let sprite = new Sprite_Card(card);
+
+                if(index) this.cardPosition(sprite, index);
+                sprite.scale.x = 0;
+                sprite.x += 51;
+
+                return sprite;
+            });
         }
+    }
+
+    cardPosition(sprite, index) {
+        let margin = this.cardMargin() * index;
+        sprite.x = margin;
+        sprite._mirrorX = margin;
+    }
+
+    cardMargin() {
+        let amount = this.cardsAmount();
+        let size = this.contentSize();
+        let padding = this.paddingBetween();
+        let space = (size - (padding * amount)) / amount;
+
+        return parseInt(space < 102 ? space : 102) + padding;
+    }
+
+    addSprites() {
+        if(this.spritesAmount()) {
+            this._sprites.forEach((sprite, index) => {
+                this.addChild(sprite);
+            });
+        }
+    }
+
+    addActions() {
+
+    }
+
+    addActionsAlls(Actions) {
+        this._sprites.forEach(sprite => {
+            sprite.addActions(Actions);
+        });
     }
 
 }
 
 class Sprite_Background extends Sprite {
-    constructor() {
-        super();
+    constructor(Bitmap) {
+        super(Bitmap);
     }
 
-    initialize() {
+    initialize(Bitmap) {
+        super.initialize();
+
         this._active = false;
         this._sprites = [];
         this._limite = 624;
         this._speed = 1;
 
-        super.initialize();
         this.createSpritesParallax();
 
     }
@@ -746,13 +844,16 @@ class Sprite_Intro extends Sprite {
     }
 
     initialize() {
+        super.initialize();
+
         this._active = false;
         this._speed = 6;
         this._picture = null;
         this._clearRectangle = null;
         this._blackRectangles = [];
-        super.initialize();
+        
         this.bitmap = new Bitmap(Graphics.boxWidth, Graphics.boxHeight);
+        
         this.createPicture();
 
     }
@@ -859,10 +960,11 @@ class Spriteset_CardBattle extends Spriteset_Base {
     }
 
     initialize() {
+        super.initialize();
+
         this._backgroundSnap = null;
         this._background = null;
         this._layerIntro = null;
-        super.initialize();
 
     }
 
@@ -1123,24 +1225,30 @@ class Scene_CardBattle extends Scene_Base {
     testCardBattle() {
         let cards = [
             new Game_Card({ap: 99,hp: 99,color: Game_CardColor.WHITE,type: Game_CardType.BATTLE, file: 'example'}),
-            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLUE,type: Game_CardType.POWER, file: 'example'}),
-            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.GREEN,type: Game_CardType.NONE, file: 'example'}),
-            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.RED,type: Game_CardType.BATTLE, file: 'example'}),
-            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLACK,type: Game_CardType.BATTLE, file: 'example'}),
-            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BROWN,type: Game_CardType.BATTLE, file: 'example'}),
+            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLUE,type: Game_CardType.POWER, file: 'example'}),
+            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.GREEN,type: Game_CardType.NONE, file: 'example'}),
+            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.RED,type: Game_CardType.BATTLE, file: 'example'}),
+            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLACK,type: Game_CardType.BATTLE, file: 'example'}),
+            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BROWN,type: Game_CardType.BATTLE, file: 'example'}),
         ];
+
+        for (let i = 2; i <= 6; i++) {
+            let card = new Game_Card({ap: 99,hp: 99,color: Game_CardColor.WHITE,type: Game_CardType.BATTLE, file: 'example'});
+            cards.push(card);
+        }
+
         let cardSet = new Sprite_Cardset({ cards });
 
         this.addChild(cardSet);
-        
-        cardSet.refreshSprites();
 
-        // sprite.addActions([
-        //     { type: '_WAIT', duration: 2000 },
-        //     { type: '_CLOSE' },
-        //     { type: '_FACEDOWN' },
-        //     { type: '_OPEN' },
-        // ]);
+        cardSet.addActionsAlls([
+            // { type: '_WAIT', duration: 2000 },
+            { type: '_ACTIVE' },
+            { type: '_FACEUP' },
+            { type: '_REFRESH' },
+            { type: '_SHOW' },
+            { type: '_OPEN' },
+        ]);
 
     }
 
@@ -1187,7 +1295,6 @@ class Scene_CardBattle extends Scene_Base {
     }
 
     action(text) {
-        console.log('teste ' + text);
         this._foldersWindow.close();
     }
 

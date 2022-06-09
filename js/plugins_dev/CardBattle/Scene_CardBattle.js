@@ -30,24 +30,30 @@ class Scene_CardBattle extends Scene_Base {
     testCardBattle() {
         let cards = [
             new Game_Card({ap: 99,hp: 99,color: Game_CardColor.WHITE,type: Game_CardType.BATTLE, file: 'example'}),
-            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLUE,type: Game_CardType.POWER, file: 'example'}),
-            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.GREEN,type: Game_CardType.NONE, file: 'example'}),
-            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.RED,type: Game_CardType.BATTLE, file: 'example'}),
-            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLACK,type: Game_CardType.BATTLE, file: 'example'}),
-            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BROWN,type: Game_CardType.BATTLE, file: 'example'}),
+            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLUE,type: Game_CardType.POWER, file: 'example'}),
+            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.GREEN,type: Game_CardType.NONE, file: 'example'}),
+            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.RED,type: Game_CardType.BATTLE, file: 'example'}),
+            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLACK,type: Game_CardType.BATTLE, file: 'example'}),
+            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BROWN,type: Game_CardType.BATTLE, file: 'example'}),
         ];
+
+        for (let i = 2; i <= 6; i++) {
+            let card = new Game_Card({ap: 99,hp: 99,color: Game_CardColor.WHITE,type: Game_CardType.BATTLE, file: 'example'});
+            cards.push(card);
+        }
+
         let cardSet = new Sprite_Cardset({ cards });
 
         this.addChild(cardSet);
-        
-        cardSet.refreshSprites();
 
-        // sprite.addActions([
-        //     { type: '_WAIT', duration: 2000 },
-        //     { type: '_CLOSE' },
-        //     { type: '_FACEDOWN' },
-        //     { type: '_OPEN' },
-        // ]);
+        cardSet.addActionsAlls([
+            // { type: '_WAIT', duration: 2000 },
+            { type: '_ACTIVE' },
+            { type: '_FACEUP' },
+            { type: '_REFRESH' },
+            { type: '_SHOW' },
+            { type: '_OPEN' },
+        ]);
 
     }
 
@@ -94,7 +100,6 @@ class Scene_CardBattle extends Scene_Base {
     }
 
     action(text) {
-        console.log('teste ' + text);
         this._foldersWindow.close();
     }
 

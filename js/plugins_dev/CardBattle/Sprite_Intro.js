@@ -4,13 +4,16 @@ class Sprite_Intro extends Sprite {
     }
 
     initialize() {
+        super.initialize();
+
         this._active = false;
         this._speed = 6;
         this._picture = null;
         this._clearRectangle = null;
         this._blackRectangles = [];
-        super.initialize();
+        
         this.bitmap = new Bitmap(Graphics.boxWidth, Graphics.boxHeight);
+        
         this.createPicture();
 
     }
