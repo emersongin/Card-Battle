@@ -20,13 +20,16 @@ class Sprite_Card extends Sprite_Base {
         this._state = false;
         this._face = false;
         this._selected = false;
+
+        // initial state
+        this.scale.x = 0;
         
         // mirrors
         this._mirrorAP = Game_Card.getAP() || 0;
         this._mirrorHP = Game_Card.getHP() || 0;
         this._mirrorX = this.x;
         this._mirrorY = this.y;
-        this._mirrorScaleX = this.scale.x;
+        this._mirrorScaleX = 0;
         this._mirrorScaleY = this.scale.y;
 
         // counters
@@ -39,6 +42,7 @@ class Sprite_Card extends Sprite_Base {
 
         // observers
         this._actions = [];
+        this._subject = null;
 
         this.setFrame(0, 0, this.cardWidth(), this.cardHeight());
         this.setup();
@@ -48,6 +52,10 @@ class Sprite_Card extends Sprite_Base {
 
     hasActions() {
         return this._actions.length > 0;
+    }
+
+    notActions() {
+        return this._actions.length <= 0;
     }
 
     notEquals(value, mirror) {
@@ -106,6 +114,18 @@ class Sprite_Card extends Sprite_Base {
 
     waiting() {
         return this._frameMoving <= 0;
+    }
+
+    addSubject(subject = null) {
+        this._subject = subject;
+    }
+
+    noWaiting() {
+        let subject = this._subject;
+
+        if(!subject) return true;
+
+        return subject.notActions() && subject.waiting() && subject.notBusy() && subject.noWaiting();
     }
 
     setRangeMove(value, mirror) {
@@ -325,13 +345,15 @@ class Sprite_Card extends Sprite_Base {
     update() {
         super.update();
 
-        this.updateInterval();
-        this.updateMovement();
-        this.updateOpenAndClose();
+        if(this.noWaiting()) {
+            this.updateInterval();
+            this.updateMovement();
+            this.updateOpenAndClose();
 
-        this.updateActions();
-        this.updatePoints();
-        this.updateSelected();
+            this.updateActions();
+            this.updatePoints();
+            this.updateSelected();
+        }
 
         this._frameCounter++;
     }
@@ -362,8 +384,12 @@ class Sprite_Card extends Sprite_Base {
         }
     }
 
+    intervalCounter(each) {
+        this._frameCounter % each == 0;
+    }
+
     updateSelected() {
-        if(this.isSelected() && this.isOpen() && this._frameCounter % 8 == 0) {
+        if(this.isSelected() && this.isOpen() && this.intervalCounter(8)) {
             this._select.opacity = this._select.opacity == 255 ? 228 : 255;
         }
 
@@ -408,8 +434,6 @@ class Sprite_Card extends Sprite_Base {
     }
 
     takeAction(Action) {
-        console.log(this._openness, this.isClose(), this._mirrorX, this.scale.x);
-
         switch (Action.type) {
             case '_SHOW':
                 this.show();
@@ -446,6 +470,9 @@ class Sprite_Card extends Sprite_Base {
                 let duration = ((((animation.frames.length * 4) + 1) * 1000) / 60);
                 Action.duration = duration;
                 this.startAnimation($dataAnimations[Action.params[0]]);
+                break;
+            case '_WAITFOR':
+                this.addSubject(Action.subject || null);
                 break;
             case '_WAIT':
                 break;

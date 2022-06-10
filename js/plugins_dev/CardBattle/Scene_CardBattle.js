@@ -37,7 +37,7 @@ class Scene_CardBattle extends Scene_Base {
             // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BROWN,type: Game_CardType.BATTLE, file: 'example'}),
         ];
 
-        for (let i = 2; i <= 6; i++) {
+        for (let i = 2; i <= 40; i++) {
             let card = new Game_Card({ap: 99,hp: 99,color: Game_CardColor.WHITE,type: Game_CardType.BATTLE, file: 'example'});
             cards.push(card);
         }
@@ -46,6 +46,23 @@ class Scene_CardBattle extends Scene_Base {
 
         this.addChild(cardSet);
 
+        // cardSet.addActions(9, [
+        //     { type: '_ACTIVE' },
+        //     { type: '_FACEUP' },
+        //     { type: '_REFRESH' },
+        //     { type: '_SHOW' },
+        //     { type: '_OPEN' },
+        // ]);
+
+        // cardSet.addActions(10, [
+        //     { type: '_WAITFOR', subject: cardSet.getSpriteAt(9) },
+        //     { type: '_ACTIVE' },
+        //     { type: '_FACEUP' },
+        //     { type: '_REFRESH' },
+        //     { type: '_SHOW' },
+        //     { type: '_OPEN' },
+        // ]);
+
         cardSet.addActionsAlls([
             // { type: '_WAIT', duration: 2000 },
             { type: '_ACTIVE' },
@@ -53,7 +70,11 @@ class Scene_CardBattle extends Scene_Base {
             { type: '_REFRESH' },
             { type: '_SHOW' },
             { type: '_OPEN' },
-        ]);
+        ], { waitPrevius: true });
+
+        // this._c0 = cardSet.getSpriteAt(0);
+        // this._c1 = cardSet.getSpriteAt(1);
+        
 
     }
 
@@ -109,6 +130,7 @@ class Scene_CardBattle extends Scene_Base {
 
     update() {
         super.update();
+
     }
 
     stop() {

@@ -153,13 +153,16 @@ class Sprite_Card extends Sprite_Base {
         this._state = false;
         this._face = false;
         this._selected = false;
+
+        // initial state
+        this.scale.x = 0;
         
         // mirrors
         this._mirrorAP = Game_Card.getAP() || 0;
         this._mirrorHP = Game_Card.getHP() || 0;
         this._mirrorX = this.x;
         this._mirrorY = this.y;
-        this._mirrorScaleX = this.scale.x;
+        this._mirrorScaleX = 0;
         this._mirrorScaleY = this.scale.y;
 
         // counters
@@ -172,6 +175,7 @@ class Sprite_Card extends Sprite_Base {
 
         // observers
         this._actions = [];
+        this._subject = null;
 
         this.setFrame(0, 0, this.cardWidth(), this.cardHeight());
         this.setup();
@@ -181,6 +185,10 @@ class Sprite_Card extends Sprite_Base {
 
     hasActions() {
         return this._actions.length > 0;
+    }
+
+    notActions() {
+        return this._actions.length <= 0;
     }
 
     notEquals(value, mirror) {
@@ -239,6 +247,18 @@ class Sprite_Card extends Sprite_Base {
 
     waiting() {
         return this._frameMoving <= 0;
+    }
+
+    addSubject(subject = null) {
+        this._subject = subject;
+    }
+
+    noWaiting() {
+        let subject = this._subject;
+
+        if(!subject) return true;
+
+        return subject.notActions() && subject.waiting() && subject.notBusy() && subject.noWaiting();
     }
 
     setRangeMove(value, mirror) {
@@ -458,13 +478,15 @@ class Sprite_Card extends Sprite_Base {
     update() {
         super.update();
 
-        this.updateInterval();
-        this.updateMovement();
-        this.updateOpenAndClose();
+        if(this.noWaiting()) {
+            this.updateInterval();
+            this.updateMovement();
+            this.updateOpenAndClose();
 
-        this.updateActions();
-        this.updatePoints();
-        this.updateSelected();
+            this.updateActions();
+            this.updatePoints();
+            this.updateSelected();
+        }
 
         this._frameCounter++;
     }
@@ -495,8 +517,12 @@ class Sprite_Card extends Sprite_Base {
         }
     }
 
+    intervalCounter(each) {
+        this._frameCounter % each == 0;
+    }
+
     updateSelected() {
-        if(this.isSelected() && this.isOpen() && this._frameCounter % 8 == 0) {
+        if(this.isSelected() && this.isOpen() && this.intervalCounter(8)) {
             this._select.opacity = this._select.opacity == 255 ? 228 : 255;
         }
 
@@ -541,8 +567,6 @@ class Sprite_Card extends Sprite_Base {
     }
 
     takeAction(Action) {
-        console.log(this._openness, this.isClose(), this._mirrorX, this.scale.x);
-
         switch (Action.type) {
             case '_SHOW':
                 this.show();
@@ -579,6 +603,9 @@ class Sprite_Card extends Sprite_Base {
                 let duration = ((((animation.frames.length * 4) + 1) * 1000) / 60);
                 Action.duration = duration;
                 this.startAnimation($dataAnimations[Action.params[0]]);
+                break;
+            case '_WAITFOR':
+                this.addSubject(Action.subject || null);
                 break;
             case '_WAIT':
                 break;
@@ -664,7 +691,7 @@ class Sprite_Cardset extends Sprite {
         this._colors = new Game_Colorset(Config.colors);
 
         // config actions
-        this._activete = Config.active || true;
+        this._active = Config.active || true;
         this._selectionColorsCost = Config.selectionColorsCost || false;
         this._enableSelect = Config.enableSelect || false;
         this._selectionsNumber = Config.selectionsNumber || 0;
@@ -674,11 +701,23 @@ class Sprite_Cardset extends Sprite {
     }
 
     contentSize() {
-        return 102 * 6;
+        return 612;
     }
     
     paddingBetween() {
         return 2;
+    }
+
+    cardsAmount() {
+        return this._cards.length;
+    }
+
+    getSpriteAt(index) {
+        return this._sprites[index];
+    }
+
+    spritesAmount() {
+        return this._sprites.length;
     }
 
     setup() {
@@ -696,50 +735,36 @@ class Sprite_Cardset extends Sprite {
     }
 
     clearSprites() {
-        if(this.children.length) {
-            for (const child of this.children) {
-                this.removeChild(child);
-            }
+        while (this.spritesAmount()) {
+            this.removeChild(this._sprites.shift());
         }
-
-        this._sprites = [];
-    }
-
-    cardsAmount() {
-        return this._cards.length;
-    }
-
-    spritesAmount() {
-        return this._sprites.length;
     }
 
     createSprites() {
         if(this.cardsAmount()) {
-            this._sprites = this._cards.map((card, index) => { 
+            this._sprites = this._cards.map((card, count) => { 
                 let sprite = new Sprite_Card(card);
 
-                if(index) this.cardPosition(sprite, index);
-                sprite.scale.x = 0;
-                sprite.x += 51;
+                let position = this.cardPosition(sprite, count);
+                sprite.x = position;
+                sprite._mirrorScaleX = position;
 
                 return sprite;
             });
         }
     }
 
-    cardPosition(sprite, index) {
-        let margin = this.cardMargin() * index;
-        sprite.x = margin;
-        sprite._mirrorX = margin;
+    cardPosition(sprite, count) {
+        return (this.margin() * count) + (sprite.width / 2);
     }
 
-    cardMargin() {
+    margin() {
         let amount = this.cardsAmount();
         let size = this.contentSize();
         let padding = this.paddingBetween();
         let space = (size - (padding * amount)) / amount;
 
-        return parseInt(space < 102 ? space : 102) + padding;
+        return parseInt((space < 102 ? space : 102) + padding);
     }
 
     addSprites() {
@@ -750,13 +775,21 @@ class Sprite_Cardset extends Sprite {
         }
     }
 
-    addActions() {
-
+    addActions(order, Actions) {
+        this._sprites[order].addActions(Actions);
     }
 
-    addActionsAlls(Actions) {
-        this._sprites.forEach(sprite => {
-            sprite.addActions(Actions);
+    addActionsAlls(Actions, params = { waitPrevius: false }) {
+        this._sprites.forEach((sprite, index) => {
+            let copy = Actions.clone();
+
+            if(params.waitPrevius && index) {
+                let subject = this.getSpriteAt(index - 1);
+
+                copy.unshift({ type: '_WAITFOR', subject }); 
+            }
+
+            sprite.addActions(copy);
         });
     }
 
@@ -1232,7 +1265,7 @@ class Scene_CardBattle extends Scene_Base {
             // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BROWN,type: Game_CardType.BATTLE, file: 'example'}),
         ];
 
-        for (let i = 2; i <= 6; i++) {
+        for (let i = 2; i <= 40; i++) {
             let card = new Game_Card({ap: 99,hp: 99,color: Game_CardColor.WHITE,type: Game_CardType.BATTLE, file: 'example'});
             cards.push(card);
         }
@@ -1241,6 +1274,23 @@ class Scene_CardBattle extends Scene_Base {
 
         this.addChild(cardSet);
 
+        // cardSet.addActions(9, [
+        //     { type: '_ACTIVE' },
+        //     { type: '_FACEUP' },
+        //     { type: '_REFRESH' },
+        //     { type: '_SHOW' },
+        //     { type: '_OPEN' },
+        // ]);
+
+        // cardSet.addActions(10, [
+        //     { type: '_WAITFOR', subject: cardSet.getSpriteAt(9) },
+        //     { type: '_ACTIVE' },
+        //     { type: '_FACEUP' },
+        //     { type: '_REFRESH' },
+        //     { type: '_SHOW' },
+        //     { type: '_OPEN' },
+        // ]);
+
         cardSet.addActionsAlls([
             // { type: '_WAIT', duration: 2000 },
             { type: '_ACTIVE' },
@@ -1248,7 +1298,11 @@ class Scene_CardBattle extends Scene_Base {
             { type: '_REFRESH' },
             { type: '_SHOW' },
             { type: '_OPEN' },
-        ]);
+        ], { waitPrevius: true });
+
+        // this._c0 = cardSet.getSpriteAt(0);
+        // this._c1 = cardSet.getSpriteAt(1);
+        
 
     }
 
@@ -1304,6 +1358,7 @@ class Scene_CardBattle extends Scene_Base {
 
     update() {
         super.update();
+
     }
 
     stop() {
