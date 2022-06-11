@@ -263,17 +263,16 @@ class Sprite_Card extends Sprite_Base {
 
     setRangeMove(value, mirror) {
         if (this.notEquals(value, mirror)) {
-            return (value * (this._frameMoving - 1) + mirror) / this._frameMoving;
+            return parseInt((value * (this._frameMoving - 1) + mirror) / this._frameMoving);
         }
-        return parseFloat(value);
+        return parseInt(value);
     }
 
-    setRangeMoveInt(value, mirror) {
-        return parseInt(this.setRangeMove(value, mirror));
-    }
-
-    setRangeMoveFloat(value, mirror) {
-        return parseFloat(this.setRangeMove(value, mirror));
+    setRangeScale(value, mirror) {
+        if (this.notEquals(value, mirror)) {
+            return parseFloat((value * (this._frameMoving - 1) + mirror) / this._frameMoving).toFixed(2);
+        }
+        return parseFloat(value).toFixed(2);
     }
 
     cardWidth() {
@@ -542,10 +541,10 @@ class Sprite_Card extends Sprite_Base {
 
     updateMovement() {
         if (this.itsMoving()) {
-            this.x = this.setRangeMoveInt(this.x, this._mirrorX);
-            this.y = this.setRangeMoveInt(this.y, this._mirrorY);
-            this.scale.x = this.setRangeMoveFloat(this.scale.x, this._mirrorScaleX);
-            this.scale.y = this.setRangeMoveFloat(this.scale.y, this._mirrorScaleY);
+            this.x = this.setRangeMove(this.x, this._mirrorX);
+            this.y = this.setRangeMove(this.y, this._mirrorY);
+            this.scale.x = this.setRangeScale(this.scale.x, this._mirrorScaleX);
+            this.scale.y = this.setRangeScale(this.scale.y, this._mirrorScaleY);
             this._frameMoving--;
         }
     }
@@ -582,6 +581,7 @@ class Sprite_Card extends Sprite_Base {
             case '_CLOSE':
                 Action.duration = 200;
                 this.close();
+                this.setTimeMove(Action.duration || 100);
                 break;
             case '_ACTIVE':
                 this.active();
@@ -606,6 +606,21 @@ class Sprite_Card extends Sprite_Base {
                 break;
             case '_WAITFOR':
                 this.addSubject(Action.subject || null);
+                break;
+            case '_TRIGGER':
+                let actions = Action.actions;
+                let sprites = Action.sprites;
+                let limit = Action.limit;
+                let next = this.indexParent + 1;
+
+                if(limit <= next) return false;
+
+                actions[1] = { type: '_WAIT', duration: 100 };
+
+                console.log(next);
+
+                sprites[next].addActions(actions);
+
                 break;
             case '_WAIT':
                 break;
@@ -744,8 +759,9 @@ class Sprite_Cardset extends Sprite {
         if(this.cardsAmount()) {
             this._sprites = this._cards.map((card, count) => { 
                 let sprite = new Sprite_Card(card);
-
                 let position = this.cardPosition(sprite, count);
+
+                sprite.indexParent = count;
                 sprite.x = position;
                 sprite._mirrorScaleX = position;
 
@@ -781,16 +797,34 @@ class Sprite_Cardset extends Sprite {
 
     addActionsAlls(Actions, params = { waitPrevius: false }) {
         this._sprites.forEach((sprite, index) => {
-            let copy = Actions.clone();
+            let actionsCopy = Actions.clone();
 
             if(params.waitPrevius && index) {
                 let subject = this.getSpriteAt(index - 1);
 
-                copy.unshift({ type: '_WAITFOR', subject }); 
+                actionsCopy.unshift({ 
+                    type: '_WAITFOR', 
+                    subject 
+                }); 
             }
 
-            sprite.addActions(copy);
+            sprite.addActions(actionsCopy);
         });
+    }
+
+    addActionsTrigger(Actions) {
+        let actionsCopy = Actions.clone();
+        let sprites = this._sprites;
+        let limit = sprites.length;
+
+        actionsCopy.unshift({ 
+            type: '_TRIGGER', 
+            sprites, 
+            actions: actionsCopy, 
+            limit 
+        }); 
+
+        this._sprites[0].addActions(actionsCopy);
     }
 
 }
@@ -1291,14 +1325,23 @@ class Scene_CardBattle extends Scene_Base {
         //     { type: '_OPEN' },
         // ]);
 
-        cardSet.addActionsAlls([
-            // { type: '_WAIT', duration: 2000 },
+        // cardSet.addActionsAlls([
+        //     // { type: '_WAIT', duration: 2000 },
+        //     { type: '_ACTIVE' },
+        //     { type: '_FACEUP' },
+        //     { type: '_REFRESH' },
+        //     { type: '_SHOW' },
+        //     { type: '_OPEN' },
+        // ], { waitPrevius: true });
+
+        cardSet.addActionsTrigger([
+            { type: '_WAIT' },
             { type: '_ACTIVE' },
             { type: '_FACEUP' },
             { type: '_REFRESH' },
             { type: '_SHOW' },
             { type: '_OPEN' },
-        ], { waitPrevius: true });
+        ]);
 
         // this._c0 = cardSet.getSpriteAt(0);
         // this._c1 = cardSet.getSpriteAt(1);

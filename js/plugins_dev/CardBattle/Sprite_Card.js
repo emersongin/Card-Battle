@@ -130,17 +130,16 @@ class Sprite_Card extends Sprite_Base {
 
     setRangeMove(value, mirror) {
         if (this.notEquals(value, mirror)) {
-            return (value * (this._frameMoving - 1) + mirror) / this._frameMoving;
+            return parseInt((value * (this._frameMoving - 1) + mirror) / this._frameMoving);
         }
-        return parseFloat(value);
+        return parseInt(value);
     }
 
-    setRangeMoveInt(value, mirror) {
-        return parseInt(this.setRangeMove(value, mirror));
-    }
-
-    setRangeMoveFloat(value, mirror) {
-        return parseFloat(this.setRangeMove(value, mirror));
+    setRangeScale(value, mirror) {
+        if (this.notEquals(value, mirror)) {
+            return parseFloat((value * (this._frameMoving - 1) + mirror) / this._frameMoving).toFixed(2);
+        }
+        return parseFloat(value).toFixed(2);
     }
 
     cardWidth() {
@@ -409,10 +408,10 @@ class Sprite_Card extends Sprite_Base {
 
     updateMovement() {
         if (this.itsMoving()) {
-            this.x = this.setRangeMoveInt(this.x, this._mirrorX);
-            this.y = this.setRangeMoveInt(this.y, this._mirrorY);
-            this.scale.x = this.setRangeMoveFloat(this.scale.x, this._mirrorScaleX);
-            this.scale.y = this.setRangeMoveFloat(this.scale.y, this._mirrorScaleY);
+            this.x = this.setRangeMove(this.x, this._mirrorX);
+            this.y = this.setRangeMove(this.y, this._mirrorY);
+            this.scale.x = this.setRangeScale(this.scale.x, this._mirrorScaleX);
+            this.scale.y = this.setRangeScale(this.scale.y, this._mirrorScaleY);
             this._frameMoving--;
         }
     }
@@ -449,6 +448,7 @@ class Sprite_Card extends Sprite_Base {
             case '_CLOSE':
                 Action.duration = 200;
                 this.close();
+                this.setTimeMove(Action.duration || 100);
                 break;
             case '_ACTIVE':
                 this.active();
@@ -473,6 +473,21 @@ class Sprite_Card extends Sprite_Base {
                 break;
             case '_WAITFOR':
                 this.addSubject(Action.subject || null);
+                break;
+            case '_TRIGGER':
+                let actions = Action.actions;
+                let sprites = Action.sprites;
+                let limit = Action.limit;
+                let next = this.indexParent + 1;
+
+                if(limit <= next) return false;
+
+                actions[1] = { type: '_WAIT', duration: 100 };
+
+                console.log(next);
+
+                sprites[next].addActions(actions);
+
                 break;
             case '_WAIT':
                 break;

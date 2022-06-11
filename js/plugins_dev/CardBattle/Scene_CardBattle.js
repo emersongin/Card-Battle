@@ -63,14 +63,23 @@ class Scene_CardBattle extends Scene_Base {
         //     { type: '_OPEN' },
         // ]);
 
-        cardSet.addActionsAlls([
-            // { type: '_WAIT', duration: 2000 },
+        // cardSet.addActionsAlls([
+        //     // { type: '_WAIT', duration: 2000 },
+        //     { type: '_ACTIVE' },
+        //     { type: '_FACEUP' },
+        //     { type: '_REFRESH' },
+        //     { type: '_SHOW' },
+        //     { type: '_OPEN' },
+        // ], { waitPrevius: true });
+
+        cardSet.addActionsTrigger([
+            { type: '_WAIT' },
             { type: '_ACTIVE' },
             { type: '_FACEUP' },
             { type: '_REFRESH' },
             { type: '_SHOW' },
             { type: '_OPEN' },
-        ], { waitPrevius: true });
+        ]);
 
         // this._c0 = cardSet.getSpriteAt(0);
         // this._c1 = cardSet.getSpriteAt(1);

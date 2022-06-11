@@ -66,8 +66,9 @@ class Sprite_Cardset extends Sprite {
         if(this.cardsAmount()) {
             this._sprites = this._cards.map((card, count) => { 
                 let sprite = new Sprite_Card(card);
-
                 let position = this.cardPosition(sprite, count);
+
+                sprite.indexParent = count;
                 sprite.x = position;
                 sprite._mirrorScaleX = position;
 
@@ -103,16 +104,34 @@ class Sprite_Cardset extends Sprite {
 
     addActionsAlls(Actions, params = { waitPrevius: false }) {
         this._sprites.forEach((sprite, index) => {
-            let copy = Actions.clone();
+            let actionsCopy = Actions.clone();
 
             if(params.waitPrevius && index) {
                 let subject = this.getSpriteAt(index - 1);
 
-                copy.unshift({ type: '_WAITFOR', subject }); 
+                actionsCopy.unshift({ 
+                    type: '_WAITFOR', 
+                    subject 
+                }); 
             }
 
-            sprite.addActions(copy);
+            sprite.addActions(actionsCopy);
         });
+    }
+
+    addActionsTrigger(Actions) {
+        let actionsCopy = Actions.clone();
+        let sprites = this._sprites;
+        let limit = sprites.length;
+
+        actionsCopy.unshift({ 
+            type: '_TRIGGER', 
+            sprites, 
+            actions: actionsCopy, 
+            limit 
+        }); 
+
+        this._sprites[0].addActions(actionsCopy);
     }
 
 }
