@@ -482,9 +482,7 @@ class Sprite_Card extends Sprite_Base {
 
                 if(limit <= next) return false;
 
-                actions[1] = { type: '_WAIT', duration: 100 };
-
-                console.log(next);
+                actions[0] = { type: '_WAIT', duration: 60 };
 
                 sprites[next].addActions(actions);
 

@@ -615,7 +615,7 @@ class Sprite_Card extends Sprite_Base {
 
                 if(limit <= next) return false;
 
-                actions[1] = { type: '_WAIT', duration: 100 };
+                actions[0] = { type: '_WAIT', duration: 60 };
 
                 console.log(next);
 
@@ -817,12 +817,15 @@ class Sprite_Cardset extends Sprite {
         let sprites = this._sprites;
         let limit = sprites.length;
 
-        actionsCopy.unshift({ 
-            type: '_TRIGGER', 
-            sprites, 
-            actions: actionsCopy, 
-            limit 
-        }); 
+        actionsCopy.unshift(
+            { type: '_WAIT' }, 
+            { 
+                type: '_TRIGGER', 
+                sprites, 
+                actions: actionsCopy, 
+                limit 
+            }
+        ); 
 
         this._sprites[0].addActions(actionsCopy);
     }
@@ -1335,7 +1338,6 @@ class Scene_CardBattle extends Scene_Base {
         // ], { waitPrevius: true });
 
         cardSet.addActionsTrigger([
-            { type: '_WAIT' },
             { type: '_ACTIVE' },
             { type: '_FACEUP' },
             { type: '_REFRESH' },

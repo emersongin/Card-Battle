@@ -73,7 +73,6 @@ class Scene_CardBattle extends Scene_Base {
         // ], { waitPrevius: true });
 
         cardSet.addActionsTrigger([
-            { type: '_WAIT' },
             { type: '_ACTIVE' },
             { type: '_FACEUP' },
             { type: '_REFRESH' },
