@@ -14,7 +14,7 @@ class Sprite_Cardset extends Sprite {
 
         // config actions
         this._active = Config.active || true;
-        this._selectionColorsCost = Config.selectionColorsCost || false;
+        this._colorsCost = Config.colorsCost || true;
         this._enableSelect = Config.enableSelect || false;
         this._selectionsNumber = Config.selectionsNumber || 0;
 
@@ -64,17 +64,57 @@ class Sprite_Cardset extends Sprite {
 
     createSprites() {
         if(this.cardsAmount()) {
-            this._sprites = this._cards.map((card, count) => { 
+            this._sprites = this._cards.map((card, index) => { 
                 let sprite = new Sprite_Card(card);
-                let position = this.cardPosition(sprite, count);
+                let coord = this.cardPosition(sprite, index);
 
-                sprite.indexParent = count;
-                sprite.x = position;
-                sprite._mirrorScaleX = position;
+                this.setSpriteActive(card, sprite);
+                this.setSpriteXCoord(sprite, coord);
+                this.setSpriteParentIndex(sprite, index);
 
                 return sprite;
             });
         }
+    }
+
+    setSpriteActive(card, sprite) {
+        if(this._active) {
+            this.spriteActiveCost(card, sprite);
+        } else {
+            sprite.inactive();
+        }
+    }
+
+    spriteActiveCost(card, sprite) {
+        if(this._colorsCost) {
+            this.activeColorCost(card, sprite);
+        } else {
+            sprite.active();
+        }
+    }
+
+    activeColorCost(card, sprite) {
+        if(this.hasColorCost(card)) {
+            sprite.active();
+        } else {
+            sprite.inactive();
+        }
+    }
+
+    hasColorCost(card) {
+        return this.hasColorPoints(card.getColor(), card.getCost());
+    }
+
+    hasColorPoints(color, cost) {
+        return this._colors.hasPoints(color, cost);
+    }
+
+    setSpriteXCoord(sprite, coord) {
+        sprite.setCoordX(coord);
+    }
+
+    setSpriteParentIndex(sprite, index) {
+        sprite.setParentIndex(index);
     }
 
     cardPosition(sprite, count) {
@@ -96,6 +136,24 @@ class Sprite_Cardset extends Sprite {
                 this.addChild(sprite);
             });
         }
+    }
+
+    openSetFaceUp(faceup = false) {
+        this.addActionsTrigger([
+            { type: '_FACEUP' },
+            { type: '_REFRESH' },
+            { type: '_SHOW' },
+            { type: '_OPEN' },
+        ]);
+    }
+
+    openSetFaceDown() {
+        this.addActionsTrigger([
+            { type: '_FACEDOWN' },
+            { type: '_REFRESH' },
+            { type: '_SHOW' },
+            { type: '_OPEN' },
+        ]);
     }
 
     addActions(order, Actions) {

@@ -46,7 +46,7 @@ class Game_Colorset {
     }
 
     hasPoints(color, max) {
-        if(color === 'brown') return false;
+        if(color === 'brown') return true;
 
         return this['_' + color] >= max;
     }
@@ -91,7 +91,6 @@ class Game_Card {
         this._type = Card.type;
         this._file = Card.file;
         this._cost = Card.cost || 0;
-
 
     }
 
@@ -155,6 +154,7 @@ class Sprite_Card extends Sprite_Base {
         this._selected = false;
 
         // initial state
+        this.parentIndex = 0;
         this.scale.x = 0;
         
         // mirrors
@@ -181,6 +181,19 @@ class Sprite_Card extends Sprite_Base {
         this.setup();
         this.createLayers();
 
+    }
+
+    setParentIndex(index) {
+        this.parentIndex = index;
+    }
+
+    setCoordX(coordX) {
+        this.x = coordX;
+        this.setMirrorX(coordX);
+    }
+
+    setMirrorX(coordX) {
+        this._mirrorX = coordX;
     }
 
     hasActions() {
@@ -609,17 +622,16 @@ class Sprite_Card extends Sprite_Base {
                 break;
             case '_TRIGGER':
                 let actions = Action.actions;
-                let sprites = Action.sprites;
-                let limit = Action.limit;
-                let next = this.indexParent + 1;
+                let next = this.parentIndex + 1;
 
-                if(limit <= next) return false;
+                if(Action.limit <= next) return false;
 
-                actions[0] = { type: '_WAIT', duration: 60 };
+                actions[0] = { 
+                    type: '_WAIT', 
+                    duration: 100 
+                };
 
-                console.log(next);
-
-                sprites[next].addActions(actions);
+                Action.sprites[next].addActions(actions);
 
                 break;
             case '_WAIT':
@@ -707,7 +719,7 @@ class Sprite_Cardset extends Sprite {
 
         // config actions
         this._active = Config.active || true;
-        this._selectionColorsCost = Config.selectionColorsCost || false;
+        this._colorsCost = Config.colorsCost || true;
         this._enableSelect = Config.enableSelect || false;
         this._selectionsNumber = Config.selectionsNumber || 0;
 
@@ -757,17 +769,57 @@ class Sprite_Cardset extends Sprite {
 
     createSprites() {
         if(this.cardsAmount()) {
-            this._sprites = this._cards.map((card, count) => { 
+            this._sprites = this._cards.map((card, index) => { 
                 let sprite = new Sprite_Card(card);
-                let position = this.cardPosition(sprite, count);
+                let coord = this.cardPosition(sprite, index);
 
-                sprite.indexParent = count;
-                sprite.x = position;
-                sprite._mirrorScaleX = position;
+                this.setSpriteActive(card, sprite);
+                this.setSpriteXCoord(sprite, coord);
+                this.setSpriteParentIndex(sprite, index);
 
                 return sprite;
             });
         }
+    }
+
+    setSpriteActive(card, sprite) {
+        if(this._active) {
+            this.spriteActiveCost(card, sprite);
+        } else {
+            sprite.inactive();
+        }
+    }
+
+    spriteActiveCost(card, sprite) {
+        if(this._colorsCost) {
+            this.activeColorCost(card, sprite);
+        } else {
+            sprite.active();
+        }
+    }
+
+    activeColorCost(card, sprite) {
+        if(this.hasColorCost(card)) {
+            sprite.active();
+        } else {
+            sprite.inactive();
+        }
+    }
+
+    hasColorCost(card) {
+        return this.hasColorPoints(card.getColor(), card.getCost());
+    }
+
+    hasColorPoints(color, cost) {
+        return this._colors.hasPoints(color, cost);
+    }
+
+    setSpriteXCoord(sprite, coord) {
+        sprite.setCoordX(coord);
+    }
+
+    setSpriteParentIndex(sprite, index) {
+        sprite.setParentIndex(index);
     }
 
     cardPosition(sprite, count) {
@@ -789,6 +841,24 @@ class Sprite_Cardset extends Sprite {
                 this.addChild(sprite);
             });
         }
+    }
+
+    openSetFaceUp(faceup = false) {
+        this.addActionsTrigger([
+            { type: '_FACEUP' },
+            { type: '_REFRESH' },
+            { type: '_SHOW' },
+            { type: '_OPEN' },
+        ]);
+    }
+
+    openSetFaceDown() {
+        this.addActionsTrigger([
+            { type: '_FACEDOWN' },
+            { type: '_REFRESH' },
+            { type: '_SHOW' },
+            { type: '_OPEN' },
+        ]);
     }
 
     addActions(order, Actions) {
@@ -1294,15 +1364,15 @@ class Scene_CardBattle extends Scene_Base {
 
     testCardBattle() {
         let cards = [
-            new Game_Card({ap: 99,hp: 99,color: Game_CardColor.WHITE,type: Game_CardType.BATTLE, file: 'example'}),
+            new Game_Card({ap: 50,hp: 50,color: Game_CardColor.WHITE,type: Game_CardType.BATTLE, file: 'example', cost: 1}),
             // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLUE,type: Game_CardType.POWER, file: 'example'}),
             // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.GREEN,type: Game_CardType.NONE, file: 'example'}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.RED,type: Game_CardType.BATTLE, file: 'example'}),
+            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.RED,type: Game_CardType.BATTLE, file: 'example', cost: 3}),
             // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLACK,type: Game_CardType.BATTLE, file: 'example'}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BROWN,type: Game_CardType.BATTLE, file: 'example'}),
+            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BROWN,type: Game_CardType.BATTLE, file: 'example', cost: 0}),
         ];
 
-        for (let i = 2; i <= 40; i++) {
+        for (let i = 2; i <= 10; i++) {
             let card = new Game_Card({ap: 99,hp: 99,color: Game_CardColor.WHITE,type: Game_CardType.BATTLE, file: 'example'});
             cards.push(card);
         }
@@ -1310,6 +1380,8 @@ class Scene_CardBattle extends Scene_Base {
         let cardSet = new Sprite_Cardset({ cards });
 
         this.addChild(cardSet);
+
+        cardSet.openSetFaceUp();
 
         // cardSet.addActions(9, [
         //     { type: '_ACTIVE' },
@@ -1336,14 +1408,6 @@ class Scene_CardBattle extends Scene_Base {
         //     { type: '_SHOW' },
         //     { type: '_OPEN' },
         // ], { waitPrevius: true });
-
-        cardSet.addActionsTrigger([
-            { type: '_ACTIVE' },
-            { type: '_FACEUP' },
-            { type: '_REFRESH' },
-            { type: '_SHOW' },
-            { type: '_OPEN' },
-        ]);
 
         // this._c0 = cardSet.getSpriteAt(0);
         // this._c1 = cardSet.getSpriteAt(1);

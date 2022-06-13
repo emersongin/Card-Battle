@@ -9,7 +9,6 @@ class Game_Card {
         this._file = Card.file;
         this._cost = Card.cost || 0;
 
-
     }
 
     reset() {

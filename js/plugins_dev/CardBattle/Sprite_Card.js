@@ -22,6 +22,7 @@ class Sprite_Card extends Sprite_Base {
         this._selected = false;
 
         // initial state
+        this.parentIndex = 0;
         this.scale.x = 0;
         
         // mirrors
@@ -48,6 +49,19 @@ class Sprite_Card extends Sprite_Base {
         this.setup();
         this.createLayers();
 
+    }
+
+    setParentIndex(index) {
+        this.parentIndex = index;
+    }
+
+    setCoordX(coordX) {
+        this.x = coordX;
+        this.setMirrorX(coordX);
+    }
+
+    setMirrorX(coordX) {
+        this._mirrorX = coordX;
     }
 
     hasActions() {
@@ -476,15 +490,16 @@ class Sprite_Card extends Sprite_Base {
                 break;
             case '_TRIGGER':
                 let actions = Action.actions;
-                let sprites = Action.sprites;
-                let limit = Action.limit;
-                let next = this.indexParent + 1;
+                let next = this.parentIndex + 1;
 
-                if(limit <= next) return false;
+                if(Action.limit <= next) return false;
 
-                actions[0] = { type: '_WAIT', duration: 60 };
+                actions[0] = { 
+                    type: '_WAIT', 
+                    duration: 100 
+                };
 
-                sprites[next].addActions(actions);
+                Action.sprites[next].addActions(actions);
 
                 break;
             case '_WAIT':

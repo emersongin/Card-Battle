@@ -9,7 +9,7 @@ class Game_Colorset {
     }
 
     hasPoints(color, max) {
-        if(color === 'brown') return false;
+        if(color === 'brown') return true;
 
         return this['_' + color] >= max;
     }
