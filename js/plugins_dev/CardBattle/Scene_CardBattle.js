@@ -30,10 +30,10 @@ class Scene_CardBattle extends Scene_Base {
     testCardBattle() {
         let cards = [
             new Game_Card({ap: 50,hp: 50,color: Game_CardColor.WHITE,type: Game_CardType.BATTLE, file: 'example', cost: 1}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLUE,type: Game_CardType.POWER, file: 'example'}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.GREEN,type: Game_CardType.NONE, file: 'example'}),
+            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLUE,type: Game_CardType.POWER, file: 'example'}),
+            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.GREEN,type: Game_CardType.NONE, file: 'example'}),
             new Game_Card({ap: 99,hp: 999,color: Game_CardColor.RED,type: Game_CardType.BATTLE, file: 'example', cost: 3}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLACK,type: Game_CardType.BATTLE, file: 'example'}),
+            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLACK,type: Game_CardType.BATTLE, file: 'example'}),
             new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BROWN,type: Game_CardType.BATTLE, file: 'example', cost: 0}),
         ];
 
@@ -57,7 +57,7 @@ class Scene_CardBattle extends Scene_Base {
         // ]);
 
         // cardSet.addActions(10, [
-        //     { type: '_WAITFOR', subject: cardSet.getSpriteAt(9) },
+        //     { type: '_WAITFOR', subject: cardSet.spriteAt(9) },
         //     { type: '_ACTIVE' },
         //     { type: '_FACEUP' },
         //     { type: '_REFRESH' },
@@ -74,8 +74,8 @@ class Scene_CardBattle extends Scene_Base {
         //     { type: '_OPEN' },
         // ], { waitPrevius: true });
 
-        // this._c0 = cardSet.getSpriteAt(0);
-        // this._c1 = cardSet.getSpriteAt(1);
+        // this._c0 = cardSet.spriteAt(0);
+        // this._c1 = cardSet.spriteAt(1);
         
 
     }

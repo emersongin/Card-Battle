@@ -15,11 +15,21 @@ class Sprite_Cardset extends Sprite {
         // config actions
         this._active = Config.active || true;
         this._colorsCost = Config.colorsCost || true;
-        this._enableSelect = Config.enableSelect || false;
+        this._enableSelect = Config.enableSelect || true;
         this._selectionsNumber = Config.selectionsNumber || 0;
+        this._selectionIndexAt = 0;
+        this._stateSelectionIndexAt = -1;
 
         this.setup();
 
+    }
+
+    isActive() {
+        return this._active;
+    }
+
+    isSelectionEnabled() {
+        return this._enableSelect;
     }
 
     contentSize() {
@@ -34,12 +44,73 @@ class Sprite_Cardset extends Sprite {
         return this._cards.length;
     }
 
-    getSpriteAt(index) {
+    selectIndex(index) {
+        return this._selectionIndexAt;
+    }
+
+    setSelectIndex(index) {
+        this._selectionIndexAt = index;
+    }
+
+    spriteAt(index) {
         return this._sprites[index];
     }
 
+    spriteset() {
+        return this._sprites;
+    }
+
     spritesAmount() {
-        return this._sprites.length;
+        return this.spriteset().length;
+    }
+
+    spritesHasActions() {
+        if(this.spritesAmount()) {
+            return this.spriteset().some(sprite => sprite.hasActions());
+        }
+        return false;
+    }
+
+    spritesNotActions() {
+        if(this.spritesAmount()) {
+            return this.spriteset().every(sprite => sprite.notActions());
+        }
+        return false;
+    }
+
+    spritesAreMoving() {
+        if(this.spritesAmount()) {
+            return this.spriteset().some(sprite => sprite.itsMoving());
+        }
+        return false;
+    }
+    
+    spritesAreWaiting() {
+        if(this.spritesAmount()) {
+            return this.spriteset().every(sprite => sprite.waiting());
+        }
+        return false;
+    } 
+    
+    spritesAreBusy() {
+        if(this.spritesAmount()) {
+            return this.spriteset().some(sprite => sprite.itsBusy());
+        }
+        return false;
+    }
+
+    spritesAreNotBusy() {
+        if(this.spritesAmount()) {
+            return this.spriteset().every(sprite => sprite.notBusy());
+        }
+        return false;
+    }
+
+    spritesNoWaiting() {
+        if(this.spritesAmount()) {
+            return this.spriteset().every(sprite => sprite.noWaiting());
+        }
+        return false;
     }
 
     setup() {
@@ -78,7 +149,7 @@ class Sprite_Cardset extends Sprite {
     }
 
     setSpriteActive(card, sprite) {
-        if(this._active) {
+        if(this.isActive()) {
             this.spriteActiveCost(card, sprite);
         } else {
             sprite.inactive();
@@ -138,7 +209,7 @@ class Sprite_Cardset extends Sprite {
         }
     }
 
-    openSetFaceUp(faceup = false) {
+    openSetFaceUp() {
         this.addActionsTrigger([
             { type: '_FACEUP' },
             { type: '_REFRESH' },
@@ -165,7 +236,7 @@ class Sprite_Cardset extends Sprite {
             let actionsCopy = Actions.clone();
 
             if(params.waitPrevius && index) {
-                let subject = this.getSpriteAt(index - 1);
+                let subject = this.spriteAt(index - 1);
 
                 actionsCopy.unshift({ 
                     type: '_WAITFOR', 
@@ -195,4 +266,62 @@ class Sprite_Cardset extends Sprite {
         this._sprites[0].addActions(actionsCopy);
     }
 
+    update() {
+        super.update();
+
+        if(this.isActive() && this.spritesNotActions() && 
+            this.spritesAreWaiting() && this.spritesAreNotBusy()) {
+
+            this.updateSelection();
+
+        }
+
+    }
+
+    updateSelection() {
+        if(this.isSelectionEnabled()) {
+            this.updateSelector();
+            this.updateSpriteSelected();
+            
+        }
+    }
+
+    selectSprite(index) {
+        const sprite = this.spriteAt(index);
+
+        if(sprite) {
+            sprite.selected();
+            sprite.refresh();
+        }
+    }
+
+    unselectSprite(index) {
+        const sprite = this.spriteAt(index);
+
+        if(sprite) {
+            sprite.unselected();
+            sprite.refresh();
+        }
+    }
+
+    updateSelector() {
+        let index = this.selectIndex();
+        
+        if(index > 0 && Input.isTriggered('left')) {
+            this.setSelectIndex(index - 1);
+
+        } else if (index < (this.spritesAmount() - 1) && Input.isTriggered('right')) {
+            this.setSelectIndex(index + 1);
+
+        }
+    }
+
+    updateSpriteSelected() {
+        if(this._selectionIndexAt !== this._stateSelectionIndexAt) {
+            this.unselectSprite(this._stateSelectionIndexAt);
+            this.selectSprite(this._selectionIndexAt);
+            this._stateSelectionIndexAt = this._selectionIndexAt;
+        }
+    }
+    
 }

@@ -80,6 +80,14 @@ class Sprite_Card extends Sprite_Base {
         return !this._state;
     }
 
+    selected() {
+        this._selected = true;
+    }
+
+    unselected() {
+        this._selected = false;
+    }
+
     isSelected() {
         return this._selected;
     }
