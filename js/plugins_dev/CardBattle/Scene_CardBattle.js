@@ -42,11 +42,11 @@ class Scene_CardBattle extends Scene_Base {
             cards.push(card);
         }
 
-        let cardSet = new Sprite_Cardset({ cards });
+        let cardSet = new Spriteset_Card({ cards });
 
         this.addChild(cardSet);
 
-        cardSet.openSetFaceUp();
+        cardSet.openSetUp();
 
         // cardSet.addActions(9, [
         //     { type: '_ACTIVE' },
