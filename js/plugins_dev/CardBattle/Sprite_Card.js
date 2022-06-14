@@ -9,19 +9,19 @@ class Sprite_Card extends Sprite_Base {
 
         // states
         this.state = {
-            ap: Game_Card.getAP() || 0,
-            hp: Game_Card.getHP() || 0,
+            ap: Game_Card.ap || 0,
+            hp: Game_Card.hp || 0,
             x: this.x,
             y: this.y,
             scale: new Point(0, this.scale.y),
         };
 
         // attributes
-        this._AP = Game_Card.getAP() || 0;
-        this._HP = Game_Card.getHP() || 0;
-        this._color = Game_Card.getColor() || Game_CardColor.BROWN;
-        this._type = Game_Card.getType() || Game_CardType.NONE;
-        this._file = Game_Card.getFile() || 'index';
+        this._AP = Game_Card.ap || 0;
+        this._HP = Game_Card.hp || 0;
+        this._color = Game_Card.color || Game_CardColor.BROWN;
+        this._type = Game_Card.type || Game_CardType.NONE;
+        this._file = Game_Card.file || 'index';
 
         // initial states
         this._hiding = true;
@@ -127,7 +127,7 @@ class Sprite_Card extends Sprite_Base {
         this.state.x = coordX;
     }
 
-    moveTo(coordX, coordY) {
+    moveTo(coordX = this.x, coordY = this.y) {
         this.moveCoordX(coordX);
         this.moveCoordY(coordY);
     }
@@ -464,43 +464,52 @@ class Sprite_Card extends Sprite_Base {
         switch (Action.type) {
             case '_SHOW':
                 this.show();
+
                 break;
             case '_HIDE':
                 this.hide();
+
                 break;
             case '_OPEN':
-                Action.duration = 200;
                 this.open();
-                this.setTimeMove(Action.duration || 100);
+                this.setTimeMove(Action.duration || 200);
+
                 break;
             case '_CLOSE':
-                Action.duration = 200;
                 this.close();
-                this.setTimeMove(Action.duration || 100);
+                this.setTimeMove(Action.duration || 200);
+
                 break;
             case '_ACTIVE':
                 this.activate();
+
                 break;
             case '_INACTIVE':
                 this.inactivate();
+
                 break;
             case '_TURNUP':
                 this.turnUp();
+
                 break;
             case '_TURNDOWN':
                 this.turnDown();
+
                 break;
             case '_REFRESH':
                 this.refresh();
+
                 break;
             case '_ANIMATION':
                 let animation = $dataAnimations[Action.params[0]];
                 let duration = ((((animation.frames.length * 4) + 1) * 1000) / 60);
                 Action.duration = duration;
                 this.startAnimation($dataAnimations[Action.params[0]]);
+
                 break;
             case '_WAITFOR':
                 this.setObservable(Action.subject || null);
+
                 break;
             case '_TRIGGER':
                 let actions = Action.actions;
@@ -516,6 +525,24 @@ class Sprite_Card extends Sprite_Base {
                 Action.sprites[next].addActions(actions);
 
                 break;
+            case '_SELECTED':
+                this.selected();
+
+                break;
+            case '_UNSELECTED':
+                this.unselected();
+
+                break;
+            case '_MOVEUP':
+                this.moveTo(this.x, this.y - 20);
+                this.setTimeMove(Action.duration || 60);
+
+                break;
+            case '_MOVEDOWN':
+                this.moveTo(this.x, this.y + 20);
+                this.setTimeMove(Action.duration || 60);
+
+                break;
             case '_WAIT':
                 break;
             // case 'PLUS':
@@ -524,23 +551,11 @@ class Sprite_Card extends Sprite_Base {
             // case 'LESS':
             //     this.less(action.times);
             //     break;
-            // case 'MOVE_UP':
-            //     this.up(action.times);
-            //     break;
-            // case 'MOVE_DOWN':
-            //     this.down(action.times);
-            //     break;
             // case 'MOVE_LEFT':
             //     this.left(action.times);
             //     break;
             // case 'MOVE_RIGHT':
             //     this.right(action.times);
-            //     break;
-            // case 'SELECT':
-            //     this.select();
-            //     break;
-            // case 'UNSELECT':
-            //     this.unselect();
             //     break;
             // case 'LIKE':
             //     this.like();

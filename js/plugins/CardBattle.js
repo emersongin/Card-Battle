@@ -37,38 +37,18 @@ Game_CardColor.BROWN = "brown";
 
 class Game_Colorset {
     constructor(Colors = {}) {
-        this._white = Colors.white || 0;
-        this._blue = Colors.blue || 0;
-        this._green = Colors.green || 0;
-        this._red = Colors.red || 0;
-        this._black = Colors.black || 0;
+        this.white = Colors.white || 0;
+        this.blue = Colors.blue || 0;
+        this.green = Colors.green || 0;
+        this.red = Colors.red || 0;
+        this.black = Colors.black || 0;
 
     }
 
-    hasPoints(color, max) {
-        if(color === 'brown') return true;
+    hasPoints(colorName, points = 0) {
+        if(colorName === 'brown') return true;
 
-        return this['_' + color] >= max;
-    }
-
-    getWhitePoints() {
-        this._white;
-    }
-
-    getBluePoints() {
-        this._blue;
-    }
-
-    getGreenPoints() {
-        this._green;
-    }
-
-    getRedPoints() {
-        this._red;
-    }
-
-    getBlackPoints() {
-        this._black;
+        return this[colorName] >= points;
     }
 
 }
@@ -82,50 +62,26 @@ Game_CardType.POWER = "power";
 Game_CardType.NONE = "none";
 
 class Game_Card {
-    constructor(Card) {
+    constructor(Card = {}) {
         this._card = Card;
         //
-        this._AP = Card.ap;
-        this._HP = Card.hp;
-        this._color = Card.color;
-        this._type = Card.type;
-        this._file = Card.file;
-        this._cost = Card.cost || 0;
+        this.ap = Card.ap;
+        this.hp = Card.hp;
+        this.color = Card.color;
+        this.type = Card.type;
+        this.file = Card.file;
+        this.cost = Card.cost || 0;
 
     }
 
     reset() {
-        this._AP = this._card.ap;
-        this._HP = this._card.hp;
-        this._color = this._card.color;
-        this._type = this._card.type;
-        this._file = this._card.file;
-        this._cost = this._card.cost;
+        this.ap = this._card.ap;
+        this.hp = this._card.hp;
+        this.color = this._card.color;
+        this.type = this._card.type;
+        this.file = this._card.file;
+        this.cost = this._card.cost || 0;
         
-    }
-
-    getAP() {
-        return this._AP;
-    }
-
-    getHP() {
-        return this._HP;
-    }
-    
-    getColor() {
-        return this._color;
-    }
-    
-    getType() {
-        return this._type;
-    }
-    
-    getFile() {
-        return this._file;
-    }
-
-    getCost() {
-        return this._cost;
     }
 
 }
@@ -141,19 +97,19 @@ class Sprite_Card extends Sprite_Base {
 
         // states
         this.state = {
-            ap: Game_Card.getAP() || 0,
-            hp: Game_Card.getHP() || 0,
+            ap: Game_Card.ap || 0,
+            hp: Game_Card.hp || 0,
             x: this.x,
             y: this.y,
             scale: new Point(0, this.scale.y),
         };
 
         // attributes
-        this._AP = Game_Card.getAP() || 0;
-        this._HP = Game_Card.getHP() || 0;
-        this._color = Game_Card.getColor() || Game_CardColor.BROWN;
-        this._type = Game_Card.getType() || Game_CardType.NONE;
-        this._file = Game_Card.getFile() || 'index';
+        this._AP = Game_Card.ap || 0;
+        this._HP = Game_Card.hp || 0;
+        this._color = Game_Card.color || Game_CardColor.BROWN;
+        this._type = Game_Card.type || Game_CardType.NONE;
+        this._file = Game_Card.file || 'index';
 
         // initial states
         this._hiding = true;
@@ -259,7 +215,7 @@ class Sprite_Card extends Sprite_Base {
         this.state.x = coordX;
     }
 
-    moveTo(coordX, coordY) {
+    moveTo(coordX = this.x, coordY = this.y) {
         this.moveCoordX(coordX);
         this.moveCoordY(coordY);
     }
@@ -596,43 +552,52 @@ class Sprite_Card extends Sprite_Base {
         switch (Action.type) {
             case '_SHOW':
                 this.show();
+
                 break;
             case '_HIDE':
                 this.hide();
+
                 break;
             case '_OPEN':
-                Action.duration = 200;
                 this.open();
-                this.setTimeMove(Action.duration || 100);
+                this.setTimeMove(Action.duration || 200);
+
                 break;
             case '_CLOSE':
-                Action.duration = 200;
                 this.close();
-                this.setTimeMove(Action.duration || 100);
+                this.setTimeMove(Action.duration || 200);
+
                 break;
             case '_ACTIVE':
                 this.activate();
+
                 break;
             case '_INACTIVE':
                 this.inactivate();
+
                 break;
             case '_TURNUP':
                 this.turnUp();
+
                 break;
             case '_TURNDOWN':
                 this.turnDown();
+
                 break;
             case '_REFRESH':
                 this.refresh();
+
                 break;
             case '_ANIMATION':
                 let animation = $dataAnimations[Action.params[0]];
                 let duration = ((((animation.frames.length * 4) + 1) * 1000) / 60);
                 Action.duration = duration;
                 this.startAnimation($dataAnimations[Action.params[0]]);
+
                 break;
             case '_WAITFOR':
                 this.setObservable(Action.subject || null);
+
                 break;
             case '_TRIGGER':
                 let actions = Action.actions;
@@ -648,6 +613,24 @@ class Sprite_Card extends Sprite_Base {
                 Action.sprites[next].addActions(actions);
 
                 break;
+            case '_SELECTED':
+                this.selected();
+
+                break;
+            case '_UNSELECTED':
+                this.unselected();
+
+                break;
+            case '_MOVEUP':
+                this.moveTo(this.x, this.y - 20);
+                this.setTimeMove(Action.duration || 60);
+
+                break;
+            case '_MOVEDOWN':
+                this.moveTo(this.x, this.y + 20);
+                this.setTimeMove(Action.duration || 60);
+
+                break;
             case '_WAIT':
                 break;
             // case 'PLUS':
@@ -656,23 +639,11 @@ class Sprite_Card extends Sprite_Base {
             // case 'LESS':
             //     this.less(action.times);
             //     break;
-            // case 'MOVE_UP':
-            //     this.up(action.times);
-            //     break;
-            // case 'MOVE_DOWN':
-            //     this.down(action.times);
-            //     break;
             // case 'MOVE_LEFT':
             //     this.left(action.times);
             //     break;
             // case 'MOVE_RIGHT':
             //     this.right(action.times);
-            //     break;
-            // case 'SELECT':
-            //     this.select();
-            //     break;
-            // case 'UNSELECT':
-            //     this.unselect();
             //     break;
             // case 'LIKE':
             //     this.like();
@@ -896,7 +867,7 @@ class Spriteset_Card extends Sprite {
     }
 
     hasColorCost(card) {
-        return this.hasColorPoints(card.getColor(), card.getCost());
+        return this.hasColorPoints(card.color, card.cost);
     }
 
     hasColorPoints(color, cost) {
@@ -948,10 +919,6 @@ class Spriteset_Card extends Sprite {
             { type: '_SHOW' },
             { type: '_OPEN' },
         ]);
-    }
-
-    addActions(order, Actions) {
-        this._sprites[order].addActions(Actions);
     }
 
     addActionsAlls(Actions, params = { waitPrevius: false }) {
@@ -1015,8 +982,11 @@ class Spriteset_Card extends Sprite {
         if(sprite) {
             this.removeChild(sprite);
             this.addChild(sprite);
-            sprite.selected();
-            sprite.refresh();
+            sprite.addActions([
+                { type: '_SELECTED' },
+                { type: '_REFRESH' },
+                { type: '_MOVEUP' },
+            ]);
         }
     }
 
@@ -1026,8 +996,11 @@ class Spriteset_Card extends Sprite {
         if(sprite) {
             this.removeChild(sprite);
             this.addChildAt(sprite, index);
-            sprite.unselected();
-            sprite.refresh();
+            sprite.addActions([
+                { type: '_UNSELECTED' },
+                { type: '_REFRESH' },
+                { type: '_MOVEDOWN' },
+            ]);
         }
     }
 
@@ -1529,6 +1502,8 @@ class Scene_CardBattle extends Scene_Base {
         }
 
         let cardSet = new Spriteset_Card({ cards });
+
+        cardSet.move(40, 250);
 
         this.addChild(cardSet);
 

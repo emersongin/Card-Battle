@@ -44,6 +44,8 @@ class Scene_CardBattle extends Scene_Base {
 
         let cardSet = new Spriteset_Card({ cards });
 
+        cardSet.move(40, 250);
+
         this.addChild(cardSet);
 
         cardSet.openSetUp();

@@ -169,7 +169,7 @@ class Spriteset_Card extends Sprite {
     }
 
     hasColorCost(card) {
-        return this.hasColorPoints(card.getColor(), card.getCost());
+        return this.hasColorPoints(card.color, card.cost);
     }
 
     hasColorPoints(color, cost) {
@@ -221,10 +221,6 @@ class Spriteset_Card extends Sprite {
             { type: '_SHOW' },
             { type: '_OPEN' },
         ]);
-    }
-
-    addActions(order, Actions) {
-        this._sprites[order].addActions(Actions);
     }
 
     addActionsAlls(Actions, params = { waitPrevius: false }) {
@@ -288,8 +284,11 @@ class Spriteset_Card extends Sprite {
         if(sprite) {
             this.removeChild(sprite);
             this.addChild(sprite);
-            sprite.selected();
-            sprite.refresh();
+            sprite.addActions([
+                { type: '_SELECTED' },
+                { type: '_REFRESH' },
+                { type: '_MOVEUP' },
+            ]);
         }
     }
 
@@ -299,8 +298,11 @@ class Spriteset_Card extends Sprite {
         if(sprite) {
             this.removeChild(sprite);
             this.addChildAt(sprite, index);
-            sprite.unselected();
-            sprite.refresh();
+            sprite.addActions([
+                { type: '_UNSELECTED' },
+                { type: '_REFRESH' },
+                { type: '_MOVEDOWN' },
+            ]);
         }
     }
 
