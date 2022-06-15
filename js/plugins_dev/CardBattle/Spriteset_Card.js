@@ -21,17 +21,17 @@ class Spriteset_Card extends Sprite {
         this._active = false;
         this._enableSelect = Config.enableSelect || false;
         this._selectionsNumber = Config.selectionsNumber || 0;
-        this._selectionTargetIndex = 0;
+        this._selectionTargetIndex = -1;
 
         // states
         this.state = {
-            selectionTargetIndex: -1,
+            selectionTargetIndex: 0,
         };
         
         // rules
         this._rules = {
             typeCardsOnly: Config.typeCardsOnly || 'none',
-            colorsCost: Config.colorsCost || true,
+            colorsCost: Config.colorsCost || false,
         };
 
     }
@@ -231,7 +231,7 @@ class Spriteset_Card extends Sprite {
     }
 
     rulesCardTypeOnly(card) {
-        return this._rules.typeCardsOnly !== 'none' ? this.isCardType(card) : true;
+        return this._rules.typeCardsOnly != 'none' ? this.isCardType(card) : true;
     }
 
     isCardType(card) {
@@ -239,6 +239,7 @@ class Spriteset_Card extends Sprite {
     }
 
     rulesCardColorCost(card) {
+        console.log(this._rules.colorsCost);
         return this._rules.colorsCost ? this.hasCardColorCost(card) : true;
     }
 
@@ -358,6 +359,7 @@ class Spriteset_Card extends Sprite {
             this.unselectSprite(this._selectionTargetIndex);
             this.selectSprite(this.state.selectionTargetIndex);
             this._selectionTargetIndex = this.state.selectionTargetIndex;
+
         }
     }
 
@@ -392,6 +394,4 @@ class Spriteset_Card extends Sprite {
         }
     }
 
-
-    
 }

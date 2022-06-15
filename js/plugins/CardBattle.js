@@ -849,17 +849,17 @@ class Spriteset_Card extends Sprite {
         this._active = false;
         this._enableSelect = Config.enableSelect || false;
         this._selectionsNumber = Config.selectionsNumber || 0;
-        this._selectionTargetIndex = 0;
+        this._selectionTargetIndex = -1;
 
         // states
         this.state = {
-            selectionTargetIndex: -1,
+            selectionTargetIndex: 0,
         };
         
         // rules
         this._rules = {
             typeCardsOnly: Config.typeCardsOnly || 'none',
-            colorsCost: Config.colorsCost || true,
+            colorsCost: Config.colorsCost || false,
         };
 
     }
@@ -1059,7 +1059,7 @@ class Spriteset_Card extends Sprite {
     }
 
     rulesCardTypeOnly(card) {
-        return this._rules.typeCardsOnly !== 'none' ? this.isCardType(card) : true;
+        return this._rules.typeCardsOnly != 'none' ? this.isCardType(card) : true;
     }
 
     isCardType(card) {
@@ -1067,6 +1067,7 @@ class Spriteset_Card extends Sprite {
     }
 
     rulesCardColorCost(card) {
+        console.log(this._rules.colorsCost);
         return this._rules.colorsCost ? this.hasCardColorCost(card) : true;
     }
 
@@ -1146,14 +1147,15 @@ class Spriteset_Card extends Sprite {
         startSprite.addActions(actionsClone);
     }
 
-
-
     update() {
         super.update();
 
-        if(this.isActive() && this.spritesetNoActions() && 
-            this.spritesetAreWaiting() && this.spritesetAreNoBusy()) {
-
+        if(
+            this.isActive() && 
+            this.spritesetNoActions() && 
+            this.spritesetAreWaiting() && 
+            this.spritesetAreNoBusy()
+        ) {
             this.updateSelection();
 
         }
@@ -1165,6 +1167,27 @@ class Spriteset_Card extends Sprite {
             this.updateSelector();
             this.updateSpriteSelected();
             
+        }
+    }
+
+    updateSelector() {
+        let index = this.selectionIndex();
+        
+        if(index > 0 && Input.isTriggered('left')) {
+            this.setStateSelectionIndex(index - 1);
+
+        } else if (index < (this.spritesAmount() - 1) && Input.isTriggered('right')) {
+            this.setStateSelectionIndex(index + 1);
+
+        }
+    }
+
+    updateSpriteSelected() {
+        if(this._selectionTargetIndex !== this.state.selectionTargetIndex) {
+            this.unselectSprite(this._selectionTargetIndex);
+            this.selectSprite(this.state.selectionTargetIndex);
+            this._selectionTargetIndex = this.state.selectionTargetIndex;
+
         }
     }
 
@@ -1199,26 +1222,6 @@ class Spriteset_Card extends Sprite {
         }
     }
 
-    updateSelector() {
-        let index = this.selectionIndex();
-        
-        if(index > 0 && Input.isTriggered('left')) {
-            this.setStateSelectionIndex(index - 1);
-
-        } else if (index < (this.spritesAmount() - 1) && Input.isTriggered('right')) {
-            this.setStateSelectionIndex(index + 1);
-
-        }
-    }
-
-    updateSpriteSelected() {
-        if(this._selectionTargetIndex !== this.state.selectionTargetIndex) {
-            this.unselectSprite(this._selectionTargetIndex);
-            this.selectSprite(this.state.selectionTargetIndex);
-            this._selectionTargetIndex = this.state.selectionTargetIndex;
-        }
-    }
-    
 }
 
 class Sprite_Background extends Sprite {
@@ -1684,25 +1687,30 @@ class Scene_CardBattle extends Scene_Base {
     testCardBattle() {
         let cards = [
             new Game_Card({ap: 999,hp: 999,color: Game_CardColor.WHITE,type: Game_CardType.BATTLE, file: 'example', cost: 1}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLUE,type: Game_CardType.POWER, file: 'example'}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.GREEN,type: Game_CardType.NONE, file: 'example'}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.RED,type: Game_CardType.BATTLE, file: 'example', cost: 3}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLACK,type: Game_CardType.BATTLE, file: 'example'}),
-            // new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BROWN,type: Game_CardType.BATTLE, file: 'example', cost: 0}),
+            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLUE,type: Game_CardType.POWER, file: 'example'}),
+            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.GREEN,type: Game_CardType.NONE, file: 'example'}),
+            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.RED,type: Game_CardType.BATTLE, file: 'example', cost: 3}),
+            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLACK,type: Game_CardType.BATTLE, file: 'example'}),
+            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BROWN,type: Game_CardType.BATTLE, file: 'example', cost: 0}),
         ];
 
-        for (let i = 2; i <= 40; i++) {
+        for (let i = 2; i <= 1; i++) {
             let card = new Game_Card({ap: 99,hp: 99,color: Game_CardColor.WHITE,type: Game_CardType.BATTLE, file: 'example'});
             cards.push(card);
         }
 
-        let cardSet = new Spriteset_Card({ cards });
+        let cardSet = new Spriteset_Card({ 
+            cards,
+            enableSelect: false,
+            typeCardsOnly: 'power',
+            colorsCost: false,
+        });
 
         this.addChild(cardSet);
 
         cardSet.move(40, 250);
         cardSet.activate();
-        cardSet.openSetDown();
+        cardSet.openSetUp();
 
         // cardSet.addActions(9, [
         //     { type: '_ACTIVE' },
