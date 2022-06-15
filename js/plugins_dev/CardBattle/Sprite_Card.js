@@ -14,6 +14,7 @@ class Sprite_Card extends Sprite_Base {
             x: this.x,
             y: this.y,
             scale: new Point(0, this.scale.y),
+            zoom: new Point(1, 1),
         };
 
         // attributes
@@ -23,14 +24,15 @@ class Sprite_Card extends Sprite_Base {
         this._type = Game_Card.type || Game_CardType.NONE;
         this._file = Game_Card.file || 'index';
 
-        // initial states
+        // config
         this._hiding = true;
         this._openness = false
+        this._zoom = '_NORMAL';
         this._status = false;
         this._face = false;
         this._selection = false;
 
-        // external initial state 
+        // external state 
         this.parentIndex = 0;
         this.scale.x = 0;
 
@@ -117,27 +119,27 @@ class Sprite_Card extends Sprite_Base {
         this._face = false;
     }
 
-    setCoordY(coordY) {
-        this.y = coordY;
-        this.state.y = coordY;
+    setXCoord(coord) {
+        this.x = coord;
+        this.setStateXCoord(coord);
     }
 
-    setCoordX(coordX) {
-        this.x = coordX;
-        this.state.x = coordX;
+    setYCoord(coord) {
+        this.y = coord;
+        this.setStateYCoord(coord);
     }
 
-    moveTo(coordX = this.x, coordY = this.y) {
-        this.moveCoordX(coordX);
-        this.moveCoordY(coordY);
+    moveTo(xCoord = this.x, yCoord = this.y) {
+        this.moveXCoord(xCoord);
+        this.moveYCoord(yCoord);
     }
 
-    moveCoordX(coordX) {
-        this.state.x = coordX;
+    moveXCoord(coord) {
+        this.setStateXCoord(coord);
     }
 
-    moveCoordY(coordY) {
-        this.state.y = coordY;
+    moveYCoord(coord) {
+        this.setStateYCoord(coord);
     }
 
     isOpen() {
@@ -150,15 +152,75 @@ class Sprite_Card extends Sprite_Base {
 
     open() {
         if (this.isClose()) {
-            this.state.x = (this.x - (this.cardWidth() / 2));
-            this.state.scale.x = 1;
+            this.setStateXCoord(this.x - (this.cardWidth() / 2));
+            this.setStateXScale(1);
         }
     }
     
     close() {
         if (this.isOpen()) {
-            this.state.x = (this.x + (this.cardWidth() / 2));
-            this.state.scale.x = 0;
+            this.setStateXCoord(this.x + (this.cardWidth() / 2));
+            this.setStateXScale(0);
+        }
+    }
+
+    itsZoomPlus() {
+        return this._zoom === '_PLUS';
+    }
+
+    itsZoomNormal() {
+        return this._zoom === '_NORMAL';
+    }
+
+    itsNoZoom() {
+        return this._zoom === '_NO';
+    }
+
+    increaseZoom() {
+        if (this.itsZoomNormal()) {
+            this.setStateXCoord(this.x - 16);
+            this.setStateYCoord(this.y - 16);
+            this.setStateXScale(1.25);
+            this.setStateYScale(1.25);
+
+        } else if (this.itsNoZoom()) {
+            this.setStateXCoord(this.x - 72);
+            this.setStateYCoord(this.y - 72);
+            this.setStateXScale(1.25);
+            this.setStateYScale(1.25);
+
+        }
+    }
+
+    normalZoom() {
+        if (this.itsZoomPlus()) {
+            this.setStateXCoord(this.x + 16);
+            this.setStateYCoord(this.y + 16);
+            this.setStateXScale(1);
+            this.setStateYScale(1);
+
+        } else if (this.itsNoZoom()) {
+            this.setStateXCoord(this.x - 56);
+            this.setStateYCoord(this.y - 56);
+            this.setStateXScale(1);
+            this.setStateYScale(1);
+
+        }
+    }
+
+    decreaseZoom() {
+        if (this.itsZoomPlus()) {
+            this.setStateXCoord(this.x + 72);
+            this.setStateYCoord(this.y + 72);
+            this.setStateXScale(0);
+            this.setStateYScale(0);
+
+        } else if (this.itsZoomNormal()) {
+            this.setStateXCoord(this.x + 56);
+            this.setStateYCoord(this.y + 56);
+            this.setStateXScale(0);
+            this.setStateYScale(0);
+
         }
     }
 
@@ -200,6 +262,38 @@ class Sprite_Card extends Sprite_Base {
 
     setParentIndex(index) {
         this.parentIndex = index;
+    }
+
+    setStateAttackPoints(points) {
+        this.state.ap = points;
+    }
+
+    setStateHealthPoints(points) {
+        this.state.hp = points;
+    }
+
+    setStateXCoord(coord) {
+        this.state.x = coord;
+    }
+
+    setStateYCoord(coord) {
+        this.state.y = coord;
+    }
+
+    setStateXScale(scale) {
+        this.state.scale.x = scale;
+    }
+
+    setStateYScale(scale) {
+        this.state.scale.y = scale;
+    }
+
+    setStateXScaleZoom(scale) {
+        this.state.zoom.x = scale;
+    }
+
+    setStateYScaleZoom(scale) {
+        this.state.zoom.y = scale;
     }
 
     createLayers() {
@@ -361,6 +455,7 @@ class Sprite_Card extends Sprite_Base {
             this.updateInterval();
             this.updateMovement();
             this.updateOpenness();
+            this.updateZoom();
 
             this.updateActions();
             this.updatePoints();
@@ -404,6 +499,28 @@ class Sprite_Card extends Sprite_Base {
 
         } else if (this.scale.x == 0 && this.isOpen()) {
             this._openness = false;
+
+        }
+    }
+
+    updateZoom() {
+        if (
+            (this.scale.x == 1.25 && this.scale.y == 1.25) && 
+            (this.itsZoomNormal() || this.itsNoZoom())
+        ) {
+            this._zoom = '_PLUS';
+
+        } else if (
+            (this.scale.x == 1 && this.scale.y == 1) &&  
+            (this.itsZoomPlus() || this.itsNoZoom())
+        ) {
+            this._zoom = '_NORMAL';
+
+        } else if (
+            (this.scale.x == 0 && this.scale.y == 0) &&
+            (this.itsZoomPlus() || this.itsZoomNormal())
+        ) {
+            this._zoom = '_NO';
 
         }
     }
@@ -496,6 +613,21 @@ class Sprite_Card extends Sprite_Base {
                 this.turnDown();
 
                 break;
+            case '_INCREASE':
+                this.increaseZoom();
+                this.setTimeMove(Action.duration || 200);
+
+                break;
+            case '_NORMAL':
+                this.normalZoom();
+                this.setTimeMove(Action.duration || 200);
+
+                break;
+            case '_DECREASE':
+                this.decreaseZoom();
+                this.setTimeMove(Action.duration || 200);
+
+                break;
             case '_REFRESH':
                 this.refresh();
 
@@ -503,26 +635,29 @@ class Sprite_Card extends Sprite_Base {
             case '_ANIMATION':
                 let animation = $dataAnimations[Action.params[0]];
                 let duration = ((((animation.frames.length * 4) + 1) * 1000) / 60);
+
                 Action.duration = duration;
                 this.startAnimation($dataAnimations[Action.params[0]]);
 
                 break;
             case '_WAITFOR':
-                this.setObservable(Action.subject || null);
+                this.setObservable(Action.observable || null);
 
                 break;
             case '_TRIGGER':
-                let actions = Action.actions;
-                let next = this.parentIndex + 1;
+                let actions = Action.triggerActions;
+                let spriteset = Action.spriteset;
+                let limit = Action.limit;
+                let nextIndex = (this.parentIndex + 1);
 
-                if(Action.limit <= next) return false;
+                if(limit <= nextIndex) return false;
 
                 actions[0] = { 
                     type: '_WAIT', 
                     duration: 100 
                 };
 
-                Action.sprites[next].addActions(actions);
+                spriteset[nextIndex].addActions(actions);
 
                 break;
             case '_SELECTED':
@@ -544,13 +679,8 @@ class Sprite_Card extends Sprite_Base {
 
                 break;
             case '_WAIT':
+                //waiting...
                 break;
-            // case 'PLUS':
-            //     this.plus(action.times);
-            //     break;
-            // case 'LESS':
-            //     this.less(action.times);
-            //     break;
             // case 'MOVE_LEFT':
             //     this.left(action.times);
             //     break;

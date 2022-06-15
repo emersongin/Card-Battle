@@ -7,24 +7,32 @@ class Spriteset_Card extends Sprite {
     initialize(Config) {
         super.initialize();
 
-        // state
-        this.state = {
-            selectionIndex: -1,
-        };
+        //attr
+        this._paddingBetweenCards = Config.paddingBetweenCards || 2;
+        this._contentCards = 612;
 
+        // stores
         this._cards = Config.cards || [];
         this._sprites = [];
         this._selections = [];
         this._colors = new Game_Colorset(Config.colors);
 
-        // config actions
-        this._active = Config.active || true;
-        this._colorsCost = Config.colorsCost || true;
-        this._enableSelect = Config.enableSelect || true;
+        // config
+        this._active = false;
+        this._enableSelect = Config.enableSelect || false;
         this._selectionsNumber = Config.selectionsNumber || 0;
-        this._selectionIndex = 0;
+        this._selectionTargetIndex = 0;
 
-        this.setup();
+        // states
+        this.state = {
+            selectionTargetIndex: -1,
+        };
+        
+        // rules
+        this._rules = {
+            typeCardsOnly: Config.typeCardsOnly || 'none',
+            colorsCost: Config.colorsCost || true,
+        };
 
     }
 
@@ -32,106 +40,147 @@ class Spriteset_Card extends Sprite {
         return this._active;
     }
 
-    isSelectionEnabled() {
+    isInactive() {
+        return !this._active;
+    }
+
+    activate() {
+        this._active = true;
+        this.setup();
+    }
+
+    inactivate() {
+        this._active = false;
+    }
+
+    isEnabledSelection() {
         return this._enableSelect;
     }
 
-    contentSize() {
-        return 612;
+    isDisabledSelection() {
+        return !this._enableSelect;
     }
-    
+
+    enableSelection() {
+        this._enableSelect = true;
+    }
+
+    disableSelection() {
+        this._enableSelect = false;
+    }
+
+    contentSize() {
+        return this._contentCards;
+    }
+
     paddingBetween() {
-        return 2;
+        return this._paddingBetweenCards;
+    }
+
+    setPaddingBetwwenCards(padding) {
+        this._paddingBetweenCards = padding;
+    }
+
+    selectionIndex() {
+        return this.state.selectionTargetIndex;
+    }
+
+    setStateSelectionIndex(index) {
+        this.state.selectionTargetIndex = index;
+    }
+
+    cardset() {
+        return this._cards;
+    }
+
+    indexCard(index) {
+        return this._cards[index];
     }
 
     cardsAmount() {
         return this._cards.length;
     }
 
-    selectIndex(index) {
-        return this._selectionIndex;
-    }
-
-    setSelectIndex(index) {
-        this._selectionIndex = index;
-    }
-
-    spriteAt(index) {
-        return this._sprites[index];
-    }
-
     spriteset() {
         return this._sprites;
+    }
+
+    setSpriteset(sprites) {
+        return this._sprites = sprites;
+    }
+
+    indexSprite(index) {
+        return this._sprites[index];
     }
 
     spritesAmount() {
         return this.spriteset().length;
     }
 
-    spritesHasActions() {
+    spritesetHasActions() {
         if(this.spritesAmount()) {
             return this.spriteset().some(sprite => sprite.hasActions());
         }
         return false;
     }
 
-    spritesNoActions() {
+    spritesetNoActions() {
         if(this.spritesAmount()) {
             return this.spriteset().every(sprite => sprite.noActions());
         }
         return false;
     }
 
-    spritesAreMoving() {
+    spritesetAreMoving() {
         if(this.spritesAmount()) {
             return this.spriteset().some(sprite => sprite.itsMoving());
         }
         return false;
     }
-    
-    spritesAreWaiting() {
+
+    spritesetNoMoving() {
         if(this.spritesAmount()) {
-            return this.spriteset().every(sprite => sprite.waiting());
+            return this.spriteset().every(sprite => sprite.noMoving());
         }
         return false;
-    } 
+    }
     
-    spritesAreBusy() {
+    spritesetAreBusy() {
         if(this.spritesAmount()) {
             return this.spriteset().some(sprite => sprite.itsBusy());
         }
         return false;
     }
 
-    spritesAreNoBusy() {
+    spritesetAreNoBusy() {
         if(this.spritesAmount()) {
             return this.spriteset().every(sprite => sprite.noBusy());
         }
         return false;
     }
 
-    spritesNoMoving() {
+    spritesetAreWaiting() {
         if(this.spritesAmount()) {
-            return this.spriteset().every(sprite => sprite.noMoving());
+            return this.spriteset().every(sprite => sprite.waiting());
         }
         return false;
-    }
+    } 
 
     setup() {
-        this.clearSprites();
-        this.createSprites();
-        this.addSprites();
+        this.clearSpriteset();
+        this.createSpriteset();
+        this.addSpriteset();
     }
 
-    clearSprites() {
+    clearSpriteset() {
         while (this.spritesAmount()) {
-            this.removeChild(this._sprites.shift());
+            this.removeChild(this.spriteset().shift());
         }
     }
 
-    createSprites() {
+    createSpriteset() {
         if(this.cardsAmount()) {
-            this._sprites = this._cards.map((card, index) => { 
+            let sprites = this.cardset().map((card, index) => { 
                 let sprite = new Sprite_Card(card);
                 let coord = this.cardPosition(sprite, index);
 
@@ -141,54 +190,24 @@ class Spriteset_Card extends Sprite {
 
                 return sprite;
             });
+
+            this.setSpriteset(sprites);
         }
     }
 
-    setSpriteActive(card, sprite) {
-        if(this.isActive()) {
-            this.spriteActiveCost(card, sprite);
-        } else {
-            sprite.inactivate();
+    addSpriteset() {
+        if(this.spritesAmount()) {
+            this._sprites.forEach((sprite, index) => {
+                this.addChild(sprite);
+            });
         }
-    }
-
-    spriteActiveCost(card, sprite) {
-        if(this._colorsCost) {
-            this.activeColorCost(card, sprite);
-        } else {
-            sprite.activate();
-        }
-    }
-
-    activeColorCost(card, sprite) {
-        if(this.hasColorCost(card)) {
-            sprite.activate();
-        } else {
-            sprite.inactivate();
-        }
-    }
-
-    hasColorCost(card) {
-        return this.hasColorPoints(card.color, card.cost);
-    }
-
-    hasColorPoints(color, cost) {
-        return this._colors.hasPoints(color, cost);
-    }
-
-    setSpriteXCoord(sprite, coord) {
-        sprite.setCoordX(coord);
-    }
-
-    setSpriteParentIndex(sprite, index) {
-        sprite.setParentIndex(index);
     }
 
     cardPosition(sprite, count) {
-        return (this.margin() * count) + (sprite.width / 2);
+        return (this.cardMargin() * count) + (sprite.width / 2);
     }
 
-    margin() {
+    cardMargin() {
         let amount = this.cardsAmount();
         let size = this.contentSize();
         let padding = this.paddingBetween();
@@ -197,12 +216,50 @@ class Spriteset_Card extends Sprite {
         return parseInt((space < 102 ? space : 102) + padding);
     }
 
-    addSprites() {
-        if(this.spritesAmount()) {
-            this._sprites.forEach((sprite, index) => {
-                this.addChild(sprite);
-            });
+    setSpriteActive(card, sprite) {
+        if(
+            this.isActive() &&
+            this.rulesCardTypeOnly(card) &&
+            this.rulesCardColorCost(card) 
+        ) {
+            sprite.activate();
+
+        } else {
+            sprite.inactivate();
+
         }
+    }
+
+    rulesCardTypeOnly(card) {
+        return this._rules.typeCardsOnly !== 'none' ? this.isCardType(card) : true;
+    }
+
+    isCardType(card) {
+        return card.type == this._rules.typeCardsOnly ? true : false;
+    }
+
+    rulesCardColorCost(card) {
+        return this._rules.colorsCost ? this.hasCardColorCost(card) : true;
+    }
+
+    hasCardColorCost(card) {
+        return this.hasColorPoints(card.color, card.cost);
+    }
+
+    hasColorPoints(color, cost) {
+        return this._colors.hasPoints(color, cost);
+    }
+
+    setSpriteXCoord(sprite, coord) {
+        sprite.setXCoord(coord);
+    }
+
+    setSpriteYCoord(sprite, coord) {
+        sprite.setYCoord(coord);
+    }
+
+    setSpriteParentIndex(sprite, index) {
+        sprite.setParentIndex(index);
     }
 
     openSetUp() {
@@ -223,47 +280,53 @@ class Spriteset_Card extends Sprite {
         ]);
     }
 
+    // spriteset parallel actions
     addActionsAlls(Actions, params = { waitPrevius: false }) {
-        this._sprites.forEach((sprite, index) => {
-            let actionsCopy = Actions.clone();
+        this.spriteset().forEach((sprite, index) => {
+            let actionsClone = Actions.clone();
+            let previusIndex = (index - 1);
 
-            if(params.waitPrevius && index) {
-                let subject = this.spriteAt(index - 1);
+            if(index && params.waitPrevius) {
+                let observable = this.indexSprite(previusIndex);
 
-                actionsCopy.unshift({ 
-                    type: '_WAITFOR', 
-                    subject 
-                }); 
+                actionsClone.unshift(
+                    { type: '_WAITFOR', observable }
+                ); 
             }
 
-            sprite.addActions(actionsCopy);
+            sprite.addActions(actionsClone);
         });
     }
 
+    // spriteset wait interval actions
     addActionsTrigger(Actions) {
-        let actionsCopy = Actions.clone();
-        let sprites = this._sprites;
-        let limit = sprites.length;
+        let actionsClone = Actions.clone();
+        let spriteset = this.spriteset();
+        let limit = this.spritesAmount();
+        let startSprite = spriteset[0];
 
-        actionsCopy.unshift(
+        actionsClone.unshift(
             { type: '_WAIT' }, 
             { 
                 type: '_TRIGGER', 
-                sprites, 
-                actions: actionsCopy, 
+                spriteset, 
+                triggerActions: actionsClone, 
                 limit 
             }
         ); 
 
-        this._sprites[0].addActions(actionsCopy);
+        startSprite.addActions(actionsClone);
     }
 
     update() {
         super.update();
 
-        if(this.isActive() && this.spritesNoActions() && 
-            this.spritesAreWaiting() && this.spritesAreNoBusy()) {
-
+        if(
+            this.isActive() && 
+            this.spritesetNoActions() && 
+            this.spritesetAreWaiting() && 
+            this.spritesetAreNoBusy()
+        ) {
             this.updateSelection();
 
         }
@@ -271,33 +334,56 @@ class Spriteset_Card extends Sprite {
     }
 
     updateSelection() {
-        if(this.isSelectionEnabled()) {
+        if(this.isEnabledSelection()) {
             this.updateSelector();
             this.updateSpriteSelected();
             
         }
     }
 
+    updateSelector() {
+        let index = this.selectionIndex();
+        
+        if(index > 0 && Input.isTriggered('left')) {
+            this.setStateSelectionIndex(index - 1);
+
+        } else if (index < (this.spritesAmount() - 1) && Input.isTriggered('right')) {
+            this.setStateSelectionIndex(index + 1);
+
+        }
+    }
+
+    updateSpriteSelected() {
+        if(this._selectionTargetIndex !== this.state.selectionTargetIndex) {
+            this.unselectSprite(this._selectionTargetIndex);
+            this.selectSprite(this.state.selectionTargetIndex);
+            this._selectionTargetIndex = this.state.selectionTargetIndex;
+        }
+    }
+
     selectSprite(index) {
-        const sprite = this.spriteAt(index);
+        const sprite = this.indexSprite(index);
 
         if(sprite) {
             this.removeChild(sprite);
             this.addChild(sprite);
+
             sprite.addActions([
                 { type: '_SELECTED' },
                 { type: '_REFRESH' },
                 { type: '_MOVEUP' },
             ]);
+
         }
     }
 
     unselectSprite(index) {
-        const sprite = this.spriteAt(index);
+        const sprite = this.indexSprite(index);
 
         if(sprite) {
             this.removeChild(sprite);
             this.addChildAt(sprite, index);
+
             sprite.addActions([
                 { type: '_UNSELECTED' },
                 { type: '_REFRESH' },
@@ -306,24 +392,6 @@ class Spriteset_Card extends Sprite {
         }
     }
 
-    updateSelector() {
-        let index = this.selectIndex();
-        
-        if(index > 0 && Input.isTriggered('left')) {
-            this.setSelectIndex(index - 1);
 
-        } else if (index < (this.spritesAmount() - 1) && Input.isTriggered('right')) {
-            this.setSelectIndex(index + 1);
-
-        }
-    }
-
-    updateSpriteSelected() {
-        if(this._selectionIndex !== this.state.selectionIndex) {
-            this.unselectSprite(this.state.selectionIndex);
-            this.selectSprite(this._selectionIndex);
-            this.state.selectionIndex = this._selectionIndex;
-        }
-    }
     
 }
