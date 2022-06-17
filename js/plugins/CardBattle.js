@@ -721,11 +721,11 @@ class Sprite_Card extends Sprite_Base {
 
                 break;
             case '_ANIMATION':
-                let animation = $dataAnimations[Action.params[0]];
-                let duration = ((((animation.frames.length * 4) + 1) * 1000) / 60);
+                let animation = $dataAnimations[Action.animationIndex];
 
-                Action.duration = duration;
-                this.startAnimation($dataAnimations[Action.params[0]]);
+                Action.duration = ((((animation.frames.length * 4) + 1) * 1000) / 60);
+
+                this.startAnimation(animation);
 
                 break;
             case '_WAITFOR':
@@ -733,19 +733,22 @@ class Sprite_Card extends Sprite_Base {
 
                 break;
             case '_TRIGGER':
-                let actions = Action.triggerActions;
-                let spriteset = Action.spriteset;
-                let limit = Action.limit;
-                let nextIndex = (this.parentIndex + 1);
+                this.setObservable(Action.observable || null);
 
-                if(limit <= nextIndex) return false;
+                break;
+            case '_REACT':
+                let observables = Action.observables;
+                let actions = Action.reactions;
 
-                actions[0] = { 
-                    type: '_WAIT', 
-                    duration: 100 
-                };
+                if(Array.isArray(observables)) {
+                    observables.forEach(observable => {
+                        observable.addActions(actions);
+                    });
 
-                spriteset[nextIndex].addActions(actions);
+                } else {
+                    observables.addActions(actions);
+
+                }
 
                 break;
             case '_SELECTED':
@@ -1067,7 +1070,6 @@ class Spriteset_Card extends Sprite {
     }
 
     rulesCardColorCost(card) {
-        console.log(this._rules.colorsCost);
         return this._rules.colorsCost ? this.hasCardColorCost(card) : true;
     }
 
@@ -1092,7 +1094,14 @@ class Spriteset_Card extends Sprite {
     }
 
     openSetUp() {
-        this.addActionsTrigger([
+        this.addChainActionsTrigger([
+            { type: '_TURNUP' },
+            { type: '_REFRESH' },
+            { type: '_SHOW' },
+            { type: '_OPEN' },
+        ], [
+            { type: '_WAIT', duration: 100 },
+            { type: '_TRIGGER' },
             { type: '_TURNUP' },
             { type: '_REFRESH' },
             { type: '_SHOW' },
@@ -1101,12 +1110,23 @@ class Spriteset_Card extends Sprite {
     }
 
     openSetDown() {
-        this.addActionsTrigger([
+        this.addChainActionsTrigger([
+            { type: '_TURNDOWN' },
+            { type: '_REFRESH' },
+            { type: '_SHOW' },
+            { type: '_OPEN' },
+        ], [
+            { type: '_WAIT', duration: 100 },
+            { type: '_TRIGGER' },
             { type: '_TURNDOWN' },
             { type: '_REFRESH' },
             { type: '_SHOW' },
             { type: '_OPEN' },
         ]);
+    }
+
+    addActions(index, Actions) {
+        this.spriteset()[index].addActions(Actions);
     }
 
     // spriteset parallel actions
@@ -1127,24 +1147,20 @@ class Spriteset_Card extends Sprite {
         });
     }
 
-    // spriteset wait interval actions
-    addActionsTrigger(Actions) {
-        let actionsClone = Actions.clone();
-        let spriteset = this.spriteset();
-        let limit = this.spritesAmount();
-        let startSprite = spriteset[0];
+    // spriteset wait interval chain actions
+    addChainActionsTrigger(startActions, nextActions) {
+        this.spriteset().forEach((sprite, index) => {
+            let observable = index ? this.indexSprite(index - 1) : null;
+            let actions = !index ? startActions : nextActions;;
+            let triggerIndex = actions.findIndex(action => action.type == '_TRIGGER');
 
-        actionsClone.unshift(
-            { type: '_WAIT' }, 
-            { 
+            actions[triggerIndex] = { 
                 type: '_TRIGGER', 
-                spriteset, 
-                triggerActions: actionsClone, 
-                limit 
-            }
-        ); 
+                observable
+            };
 
-        startSprite.addActions(actionsClone);
+            sprite.addActions(actions);
+        });
     }
 
     update() {
@@ -1680,67 +1696,6 @@ class Scene_CardBattle extends Scene_Base {
     createSpriteset() {
         this._spriteset = new Spriteset_CardBattle();
         this.addChild(this._spriteset);
-        
-        this.testCardBattle();
-    }
-
-    testCardBattle() {
-        let cards = [
-            new Game_Card({ap: 999,hp: 999,color: Game_CardColor.WHITE,type: Game_CardType.BATTLE, file: 'example', cost: 1}),
-            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLUE,type: Game_CardType.POWER, file: 'example'}),
-            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.GREEN,type: Game_CardType.NONE, file: 'example'}),
-            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.RED,type: Game_CardType.BATTLE, file: 'example', cost: 3}),
-            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLACK,type: Game_CardType.BATTLE, file: 'example'}),
-            new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BROWN,type: Game_CardType.BATTLE, file: 'example', cost: 0}),
-        ];
-
-        for (let i = 2; i <= 1; i++) {
-            let card = new Game_Card({ap: 99,hp: 99,color: Game_CardColor.WHITE,type: Game_CardType.BATTLE, file: 'example'});
-            cards.push(card);
-        }
-
-        let cardSet = new Spriteset_Card({ 
-            cards,
-            enableSelect: false,
-            typeCardsOnly: 'power',
-            colorsCost: false,
-        });
-
-        this.addChild(cardSet);
-
-        cardSet.move(40, 250);
-        cardSet.activate();
-        cardSet.openSetUp();
-
-        // cardSet.addActions(9, [
-        //     { type: '_ACTIVE' },
-        //     { type: '_FACEUP' },
-        //     { type: '_REFRESH' },
-        //     { type: '_SHOW' },
-        //     { type: '_OPEN' },
-        // ]);
-
-        // cardSet.addActions(10, [
-        //     { type: '_WAITFOR', subject: cardSet.spriteAt(9) },
-        //     { type: '_ACTIVE' },
-        //     { type: '_FACEUP' },
-        //     { type: '_REFRESH' },
-        //     { type: '_SHOW' },
-        //     { type: '_OPEN' },
-        // ]);
-
-        // cardSet.addActionsAlls([
-        //     // { type: '_WAIT', duration: 2000 },
-        //     { type: '_ACTIVE' },
-        //     { type: '_FACEUP' },
-        //     { type: '_REFRESH' },
-        //     { type: '_SHOW' },
-        //     { type: '_OPEN' },
-        // ], { waitPrevius: true });
-
-        // this._c0 = cardSet.spriteAt(0);
-        // this._c1 = cardSet.spriteAt(1);
-        
 
     }
 
@@ -1840,6 +1795,85 @@ Scene_Boot.prototype.start = function () {
     this.updateDocumentTitle();
 };
 
+
+
+const _Scene_CardBattle_createSpriteset = Scene_CardBattle.prototype.createSpriteset;
+
+Scene_CardBattle.prototype.createSpriteset = function() {
+    _Scene_CardBattle_createSpriteset.call(this);
+
+    let cards = [
+        new Game_Card({ap: 999,hp: 999,color: Game_CardColor.WHITE,type: Game_CardType.BATTLE, file: 'example', cost: 1}),
+        new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLUE,type: Game_CardType.POWER, file: 'example'}),
+        new Game_Card({ap: 99,hp: 999,color: Game_CardColor.GREEN,type: Game_CardType.NONE, file: 'example'}),
+        new Game_Card({ap: 99,hp: 999,color: Game_CardColor.RED,type: Game_CardType.BATTLE, file: 'example', cost: 3}),
+        new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BLACK,type: Game_CardType.BATTLE, file: 'example'}),
+        new Game_Card({ap: 99,hp: 999,color: Game_CardColor.BROWN,type: Game_CardType.BATTLE, file: 'example', cost: 0}),
+    ];
+
+    for (let i = 2; i <= 1; i++) {
+        let card = new Game_Card({ap: 99,hp: 99,color: Game_CardColor.WHITE,type: Game_CardType.BATTLE, file: 'example'});
+        cards.push(card);
+    }
+
+    let cardSet = new Spriteset_Card({ 
+        cards,
+        // enableSelect: false,
+        // typeCardsOnly: 'power',
+        // colorsCost: false,
+    });
+
+    this.addChild(cardSet);
+
+    cardSet.move(40, 250);
+    cardSet.activate();
+    cardSet.openSetUp();
+
+    // cardSet.addActions(0, [
+    //     { type: '_ACTIVE' },
+    //     { type: '_FACEUP' },
+    //     { type: '_REFRESH' },
+    //     { type: '_SHOW' },
+    //     { type: '_OPEN' },
+    // ]);
+
+    // cardSet.addActions(1, [
+    //     { type: '_WAITFOR', observable: cardSet.indexSprite(0) },
+    //     { type: '_ACTIVE' },
+    //     { type: '_FACEUP' },
+    //     { type: '_REFRESH' },
+    //     { type: '_SHOW' },
+    //     { type: '_OPEN' },
+    // ]);
+
+    // cardSet.addActions(0, [
+    //     { type: '_TURNUP' },
+    //     { type: '_REFRESH' },
+    //     { type: '_SHOW' },
+    //     { type: '_OPEN' },
+    //     { 
+    //         type: '_REACT', 
+    //         observables: cardSet.indexSprite(1), 
+    //         reactions: [
+    //             { type: '_TURNUP' },
+    //             { type: '_REFRESH' },
+    //             { type: '_SHOW' },
+    //             { type: '_OPEN' },
+    //             { type: '_ANIMATION', animationIndex: 77 },
+    //         ] 
+    //     },
+    // ]);
+
+    // cardSet.addActionsAlls([
+    //     // { type: '_WAIT', duration: 2000 },
+    //     { type: '_ACTIVE' },
+    //     { type: '_FACEUP' },
+    //     { type: '_REFRESH' },
+    //     { type: '_SHOW' },
+    //     { type: '_OPEN' },
+    // ], { waitPrevius: true });
+
+} 
 
 })();
 

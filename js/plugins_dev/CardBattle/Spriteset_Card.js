@@ -239,7 +239,6 @@ class Spriteset_Card extends Sprite {
     }
 
     rulesCardColorCost(card) {
-        console.log(this._rules.colorsCost);
         return this._rules.colorsCost ? this.hasCardColorCost(card) : true;
     }
 
@@ -264,7 +263,14 @@ class Spriteset_Card extends Sprite {
     }
 
     openSetUp() {
-        this.addActionsTrigger([
+        this.addChainActionsTrigger([
+            { type: '_TURNUP' },
+            { type: '_REFRESH' },
+            { type: '_SHOW' },
+            { type: '_OPEN' },
+        ], [
+            { type: '_WAIT', duration: 100 },
+            { type: '_TRIGGER' },
             { type: '_TURNUP' },
             { type: '_REFRESH' },
             { type: '_SHOW' },
@@ -273,12 +279,23 @@ class Spriteset_Card extends Sprite {
     }
 
     openSetDown() {
-        this.addActionsTrigger([
+        this.addChainActionsTrigger([
+            { type: '_TURNDOWN' },
+            { type: '_REFRESH' },
+            { type: '_SHOW' },
+            { type: '_OPEN' },
+        ], [
+            { type: '_WAIT', duration: 100 },
+            { type: '_TRIGGER' },
             { type: '_TURNDOWN' },
             { type: '_REFRESH' },
             { type: '_SHOW' },
             { type: '_OPEN' },
         ]);
+    }
+
+    addActions(index, Actions) {
+        this.spriteset()[index].addActions(Actions);
     }
 
     // spriteset parallel actions
@@ -299,24 +316,20 @@ class Spriteset_Card extends Sprite {
         });
     }
 
-    // spriteset wait interval actions
-    addActionsTrigger(Actions) {
-        let actionsClone = Actions.clone();
-        let spriteset = this.spriteset();
-        let limit = this.spritesAmount();
-        let startSprite = spriteset[0];
+    // spriteset wait interval chain actions
+    addChainActionsTrigger(startActions, nextActions) {
+        this.spriteset().forEach((sprite, index) => {
+            let observable = index ? this.indexSprite(index - 1) : null;
+            let actions = !index ? startActions : nextActions;;
+            let triggerIndex = actions.findIndex(action => action.type == '_TRIGGER');
 
-        actionsClone.unshift(
-            { type: '_WAIT' }, 
-            { 
+            actions[triggerIndex] = { 
                 type: '_TRIGGER', 
-                spriteset, 
-                triggerActions: actionsClone, 
-                limit 
-            }
-        ); 
+                observable
+            };
 
-        startSprite.addActions(actionsClone);
+            sprite.addActions(actions);
+        });
     }
 
     update() {

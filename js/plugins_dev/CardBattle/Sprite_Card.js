@@ -633,11 +633,11 @@ class Sprite_Card extends Sprite_Base {
 
                 break;
             case '_ANIMATION':
-                let animation = $dataAnimations[Action.params[0]];
-                let duration = ((((animation.frames.length * 4) + 1) * 1000) / 60);
+                let animation = $dataAnimations[Action.animationIndex];
 
-                Action.duration = duration;
-                this.startAnimation($dataAnimations[Action.params[0]]);
+                Action.duration = ((((animation.frames.length * 4) + 1) * 1000) / 60);
+
+                this.startAnimation(animation);
 
                 break;
             case '_WAITFOR':
@@ -645,19 +645,22 @@ class Sprite_Card extends Sprite_Base {
 
                 break;
             case '_TRIGGER':
-                let actions = Action.triggerActions;
-                let spriteset = Action.spriteset;
-                let limit = Action.limit;
-                let nextIndex = (this.parentIndex + 1);
+                this.setObservable(Action.observable || null);
 
-                if(limit <= nextIndex) return false;
+                break;
+            case '_REACT':
+                let observables = Action.observables;
+                let actions = Action.reactions;
 
-                actions[0] = { 
-                    type: '_WAIT', 
-                    duration: 100 
-                };
+                if(Array.isArray(observables)) {
+                    observables.forEach(observable => {
+                        observable.addActions(actions);
+                    });
 
-                spriteset[nextIndex].addActions(actions);
+                } else {
+                    observables.addActions(actions);
+
+                }
 
                 break;
             case '_SELECTED':

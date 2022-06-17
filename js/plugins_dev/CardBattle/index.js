@@ -29,4 +29,6 @@
 // include ./Game_Interpreter.js 
 // include ./Goto.js
 
+// include ./Scene_CardBattle_Test.js 
+
 })();
