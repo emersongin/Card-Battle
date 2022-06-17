@@ -129,9 +129,6 @@ class Sprite_Card extends Sprite_Base {
         this._frameInterval = 0;
         this._frameMoving = 0;
 
-        // behaviors
-        this._pointsSpeed = 2;
-
         // observers
         this._actions = [];
         this._observable = null;
@@ -622,14 +619,25 @@ class Sprite_Card extends Sprite_Base {
     }
 
     updatePoints() {
-        if(this.state.ap !== this._AP || this.state.hp !== this._HP && this.isOpen()) {
-            let speed = this._pointsSpeed || 1;
+        let absAttackPoints = Math.abs((this.state.ap - this._AP));
+        let absHealthPoints = Math.abs((this.state.hp - this._HP));
+
+        if((absAttackPoints || absHealthPoints) && this.isOpen()) {
+            let speed = this.updatePointsSpeed(absAttackPoints, absHealthPoints) || 1;
 
             for (let times = 1; times <= speed; times++) {
                 this.updatePointsOnce();
             }
 
             this.refresh();
+        }
+    }
+
+    updatePointsSpeed(attackPoints, healthPoints) {
+        if(attackPoints > healthPoints) {
+            return Math.ceil(attackPoints / 8);
+        } else {
+            return Math.ceil(healthPoints / 8);
         }
     }
 
@@ -769,6 +777,11 @@ class Sprite_Card extends Sprite_Base {
                 this.setTimeMove(Action.duration || 60);
 
                 break;
+            case '_POINTS':
+                this.setStateAttackPoints(Action.attack === this._AP ? this._AP : Action.attack);
+                this.setStateHealthPoints(Action.health === this._HP ? this._HP : Action.health);
+
+                break;
             case '_WAIT':
                 //waiting...
                 break;
@@ -790,29 +803,11 @@ class Sprite_Card extends Sprite_Base {
             // case 'UNTAKE':
             //     this.untake();
             //     break;
-            // case 'ENABLE':
-            //     this.enable();
-            //     break;
-            // case 'DISABLE':
-            //     this.disable();
-            //     break;
             // case 'TRIGGERED':
             //     this.triggered();
             //     break;
             // case 'NOT_TRIGGERED':
             //     this.notTriggered();
-            //     break;
-            // case 'BLOCK':
-            //     this.block();
-            //     break;
-            // case 'UNBLOCK':
-            //     this.unblock();
-            //     break;
-            // case 'ATTACK':
-            //     this.setAttack(action.points);
-            //     break;
-            // case 'HEALTH':
-            //     this.setHealth(action.points);
             //     break;
         }
 
@@ -1827,25 +1822,36 @@ Scene_CardBattle.prototype.createSpriteset = function() {
 
     cardSet.move(40, 250);
     cardSet.activate();
-    cardSet.openSetUp();
+    // cardSet.openSetUp();
 
+    // @Test update points
+    cardSet.addActions(0, [
+        { type: '_ACTIVE' },
+        { type: '_TURNUP' },
+        { type: '_REFRESH' },
+        { type: '_SHOW' },
+        { type: '_OPEN' },
+        { type: '_POINTS', attack: 500, health: 900 },
+    ]);
+
+    // @Test finish move observable to action
     // cardSet.addActions(0, [
     //     { type: '_ACTIVE' },
-    //     { type: '_FACEUP' },
+    //     { type: '_TURNUP' },
     //     { type: '_REFRESH' },
     //     { type: '_SHOW' },
     //     { type: '_OPEN' },
     // ]);
-
     // cardSet.addActions(1, [
     //     { type: '_WAITFOR', observable: cardSet.indexSprite(0) },
     //     { type: '_ACTIVE' },
-    //     { type: '_FACEUP' },
+    //     { type: '_TURNUP' },
     //     { type: '_REFRESH' },
     //     { type: '_SHOW' },
     //     { type: '_OPEN' },
     // ]);
 
+    // @Test trigger actions in actions progress
     // cardSet.addActions(0, [
     //     { type: '_TURNUP' },
     //     { type: '_REFRESH' },
@@ -1864,10 +1870,11 @@ Scene_CardBattle.prototype.createSpriteset = function() {
     //     },
     // ]);
 
+    // @Test actions in chain
     // cardSet.addActionsAlls([
     //     // { type: '_WAIT', duration: 2000 },
     //     { type: '_ACTIVE' },
-    //     { type: '_FACEUP' },
+    //     { type: '_TURNUP' },
     //     { type: '_REFRESH' },
     //     { type: '_SHOW' },
     //     { type: '_OPEN' },

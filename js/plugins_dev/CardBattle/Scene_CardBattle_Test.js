@@ -29,25 +29,36 @@ Scene_CardBattle.prototype.createSpriteset = function() {
 
     cardSet.move(40, 250);
     cardSet.activate();
-    cardSet.openSetUp();
+    // cardSet.openSetUp();
 
+    // @Test update points
     // cardSet.addActions(0, [
     //     { type: '_ACTIVE' },
-    //     { type: '_FACEUP' },
+    //     { type: '_TURNUP' },
+    //     { type: '_REFRESH' },
+    //     { type: '_SHOW' },
+    //     { type: '_OPEN' },
+    //     { type: '_POINTS', attack: 500, health: 900 },
+    // ]);
+
+    // @Test finish move observable to action
+    // cardSet.addActions(0, [
+    //     { type: '_ACTIVE' },
+    //     { type: '_TURNUP' },
     //     { type: '_REFRESH' },
     //     { type: '_SHOW' },
     //     { type: '_OPEN' },
     // ]);
-
     // cardSet.addActions(1, [
     //     { type: '_WAITFOR', observable: cardSet.indexSprite(0) },
     //     { type: '_ACTIVE' },
-    //     { type: '_FACEUP' },
+    //     { type: '_TURNUP' },
     //     { type: '_REFRESH' },
     //     { type: '_SHOW' },
     //     { type: '_OPEN' },
     // ]);
 
+    // @Test trigger actions in actions progress
     // cardSet.addActions(0, [
     //     { type: '_TURNUP' },
     //     { type: '_REFRESH' },
@@ -66,10 +77,11 @@ Scene_CardBattle.prototype.createSpriteset = function() {
     //     },
     // ]);
 
+    // @Test actions in chain
     // cardSet.addActionsAlls([
     //     // { type: '_WAIT', duration: 2000 },
     //     { type: '_ACTIVE' },
-    //     { type: '_FACEUP' },
+    //     { type: '_TURNUP' },
     //     { type: '_REFRESH' },
     //     { type: '_SHOW' },
     //     { type: '_OPEN' },
