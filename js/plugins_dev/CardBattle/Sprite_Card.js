@@ -660,9 +660,17 @@ class Sprite_Card extends Sprite_Base {
             case '_ANIMATION':
                 let animation = $dataAnimations[Action.animationIndex];
 
-                Action.duration = this.frameduration(animation.frames.length);
+                Action.duration = this.animationFramesduration(animation.frames.length);
 
                 this.startAnimation(animation);
+
+                break;
+            case '_FLASH':   
+                let flash = this.flashAnimation();
+
+                Action.duration = this.animationFramesduration(flash.frames.length);
+
+                this.startAnimation(flash);
 
                 break;
             case '_WAITFOR':
@@ -696,6 +704,14 @@ class Sprite_Card extends Sprite_Base {
                 this.unselected();
 
                 break;
+            case '_CHECKED':
+                // this.checked();
+
+                break;
+            case '_UNCHECKED':
+                // this.unchecked();
+
+                break;
             case '_MOVEUP':
                 this.moveTo(this.x, this.y - 20);
                 this.setTimeMove(Action.duration || 60);
@@ -709,14 +725,6 @@ class Sprite_Card extends Sprite_Base {
             case '_POINTS':
                 this.setStateAttackPoints(Action.attack === this._AP ? this._AP : Action.attack);
                 this.setStateHealthPoints(Action.health === this._HP ? this._HP : Action.health);
-
-                break;
-            case '_FLASH':   
-                let flash = this.flashAnimation();
-
-                Action.duration = this.frameduration(flash.frames.length);
-
-                this.startAnimation(flash);
 
                 break;
             case '_WAIT':
@@ -772,8 +780,8 @@ class Sprite_Card extends Sprite_Base {
         };
     }
 
-    frameduration(framesLength) {
-        return ((((framesLength * 4) + 1) * 1000) / 60);
+    animationFramesduration(framesAmount) {
+        return ((((framesAmount * 4) + 1) * 1000) / 60);
     }
 
     setTimeMove(times) {
