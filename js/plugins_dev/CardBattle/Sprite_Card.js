@@ -52,12 +52,12 @@ class Sprite_Card extends Sprite_Base {
             caption: new Sprite(new Bitmap(this.cardWidth(), 24)),
             shadow: new Sprite(new Bitmap(this.cardWidth(), this.cardHeight())),
             select: new Sprite(new Bitmap(this.cardWidth(), this.cardHeight())),
+            animation: new Sprite_Base()
         };
 
         this.setFrame(0, 0, this.cardWidth(), this.cardHeight());
         this.createLayers();
         this.addLayers();
-
     }
 
     cardWidth() {
@@ -298,6 +298,7 @@ class Sprite_Card extends Sprite_Base {
         this.createCaption();
         this.createShadow();
         this.createSelection();
+        this.createAnimation();
     }
 
     addLayers() {
@@ -306,6 +307,7 @@ class Sprite_Card extends Sprite_Base {
         this.addChild(this._layers.caption);
         this.addChild(this._layers.shadow);
         this.addChild(this._layers.select);
+        this.addChild(this._layers.animation);
     }
 
     createBackground() {
@@ -376,6 +378,21 @@ class Sprite_Card extends Sprite_Base {
         this.createBorder(this._layers.select.bitmap, '#fff435');
         this._layers.select.bitmap.clearRect (3, 3, this.cardWidth() - 6, this.cardHeight() - 6);
 
+    }
+
+    createAnimation() {
+        this._layers.animation.setFrame(0, 0, this.cardWidth(), this.cardHeight());
+        this._layers.animation.bitmap = new Bitmap(this.cardWidth(), this.cardHeight());
+        this._layers.animation.opacity = 0;
+
+    }
+
+    startAnimation(animation, mirror, delay) {
+        let sprite = new Sprite_CardAnimation();
+        
+        sprite.setup(this._layers.animation, animation, mirror, delay);
+        this.parent.addChild(sprite);
+        this._animationSprites.push(sprite);
     }
 
     refresh() {
@@ -643,7 +660,7 @@ class Sprite_Card extends Sprite_Base {
             case '_ANIMATION':
                 let animation = $dataAnimations[Action.animationIndex];
 
-                Action.duration = ((((animation.frames.length * 4) + 1) * 1000) / 60);
+                Action.duration = this.frameduration(animation.frames.length);
 
                 this.startAnimation(animation);
 
@@ -694,7 +711,12 @@ class Sprite_Card extends Sprite_Base {
                 this.setStateHealthPoints(Action.health === this._HP ? this._HP : Action.health);
 
                 break;
-            case '_FLASH':
+            case '_FLASH':   
+                let flash = this.flashAnimation();
+
+                Action.duration = this.frameduration(flash.frames.length);
+
+                this.startAnimation(flash);
 
                 break;
             case '_WAIT':
@@ -727,6 +749,31 @@ class Sprite_Card extends Sprite_Base {
         }
 
         this.setTimeInterval(Action.duration || 1);
+    }
+
+    flashAnimation() {
+        return {
+            name: "Flash",
+            frames: new Array(5).fill([]),
+            timings: [
+                {
+                    flashColor: [255, 255, 255, 255],
+                    flashDuration: 4,
+                    flashScope: 1,
+                    frame: 0,
+                    se: {
+                        // name: "Thunder3", 
+                        // pan: 0, 
+                        // pitch: 85, 
+                        // volume: 100,
+                    }
+                }
+            ]
+        };
+    }
+
+    frameduration(framesLength) {
+        return ((((framesLength * 4) + 1) * 1000) / 60);
     }
 
     setTimeMove(times) {

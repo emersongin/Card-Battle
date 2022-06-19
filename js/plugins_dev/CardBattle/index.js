@@ -22,6 +22,7 @@
 // include ./Sprite_Background.js
 // include ./Sprite_Intro.js
 // include ./Spriteset_CardBattle.js 
+// include ./Sprite_CardAnimation.js
 // include ./Window_Title.js
 // include ./Window_FoldersCommand.js
 // include ./Window_MessageCardBattle.js

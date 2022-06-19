@@ -140,12 +140,12 @@ class Sprite_Card extends Sprite_Base {
             caption: new Sprite(new Bitmap(this.cardWidth(), 24)),
             shadow: new Sprite(new Bitmap(this.cardWidth(), this.cardHeight())),
             select: new Sprite(new Bitmap(this.cardWidth(), this.cardHeight())),
+            animation: new Sprite_Base()
         };
 
         this.setFrame(0, 0, this.cardWidth(), this.cardHeight());
         this.createLayers();
         this.addLayers();
-
     }
 
     cardWidth() {
@@ -386,6 +386,7 @@ class Sprite_Card extends Sprite_Base {
         this.createCaption();
         this.createShadow();
         this.createSelection();
+        this.createAnimation();
     }
 
     addLayers() {
@@ -394,6 +395,7 @@ class Sprite_Card extends Sprite_Base {
         this.addChild(this._layers.caption);
         this.addChild(this._layers.shadow);
         this.addChild(this._layers.select);
+        this.addChild(this._layers.animation);
     }
 
     createBackground() {
@@ -464,6 +466,21 @@ class Sprite_Card extends Sprite_Base {
         this.createBorder(this._layers.select.bitmap, '#fff435');
         this._layers.select.bitmap.clearRect (3, 3, this.cardWidth() - 6, this.cardHeight() - 6);
 
+    }
+
+    createAnimation() {
+        this._layers.animation.setFrame(0, 0, this.cardWidth(), this.cardHeight());
+        this._layers.animation.bitmap = new Bitmap(this.cardWidth(), this.cardHeight());
+        this._layers.animation.opacity = 0;
+
+    }
+
+    startAnimation(animation, mirror, delay) {
+        let sprite = new Sprite_CardAnimation();
+        
+        sprite.setup(this._layers.animation, animation, mirror, delay);
+        this.parent.addChild(sprite);
+        this._animationSprites.push(sprite);
     }
 
     refresh() {
@@ -731,7 +748,7 @@ class Sprite_Card extends Sprite_Base {
             case '_ANIMATION':
                 let animation = $dataAnimations[Action.animationIndex];
 
-                Action.duration = ((((animation.frames.length * 4) + 1) * 1000) / 60);
+                Action.duration = this.frameduration(animation.frames.length);
 
                 this.startAnimation(animation);
 
@@ -782,6 +799,14 @@ class Sprite_Card extends Sprite_Base {
                 this.setStateHealthPoints(Action.health === this._HP ? this._HP : Action.health);
 
                 break;
+            case '_FLASH':   
+                let flash = this.flashAnimation();
+
+                Action.duration = this.frameduration(flash.frames.length);
+
+                this.startAnimation(flash);
+
+                break;
             case '_WAIT':
                 //waiting...
                 break;
@@ -814,6 +839,31 @@ class Sprite_Card extends Sprite_Base {
         this.setTimeInterval(Action.duration || 1);
     }
 
+    flashAnimation() {
+        return {
+            name: "Flash",
+            frames: new Array(5).fill([]),
+            timings: [
+                {
+                    flashColor: [255, 255, 255, 255],
+                    flashDuration: 4,
+                    flashScope: 1,
+                    frame: 0,
+                    se: {
+                        // name: "Thunder3", 
+                        // pan: 0, 
+                        // pitch: 85, 
+                        // volume: 100,
+                    }
+                }
+            ]
+        };
+    }
+
+    frameduration(framesLength) {
+        return ((((framesLength * 4) + 1) * 1000) / 60);
+    }
+
     setTimeMove(times) {
         this._frameMoving = 0.06 * times;
     }
@@ -824,7 +874,7 @@ class Sprite_Card extends Sprite_Base {
 
 }
 
-class Spriteset_Card extends Sprite {
+class Spriteset_Card extends Sprite_Base {
     constructor(Config) {
         super(Config);
 
@@ -1469,6 +1519,50 @@ class Spriteset_CardBattle extends Spriteset_Base {
 
 }
  
+class Sprite_CardAnimation extends Sprite_Animation {
+    startFlash(color, duration) {
+        super.startFlash(color, duration);
+        this.refeshFlashBitmap(color);
+
+    }
+
+    refeshFlashBitmap(color) {
+        let CSSColor = Utils.rgbToCssColor(color[0], color[1], color[2]);
+        let alpha = color[3];
+
+        this._target.bitmap.clear();
+        this._target.bitmap.fillRect(0, 0, this._target.width, this._target.height, CSSColor);
+        this._target.opacity = alpha;
+    }
+
+    updateFlash() {
+        super.updateFlash();
+
+        if (this._flashDuration > 0) {
+            let duration = this._flashDuration;
+
+            this._target.opacity *= (duration - 1) / duration;
+        }
+    }
+
+    updatePosition() {
+        this.x = this._target.width / 2;
+
+        if (this._animation.position === 0) { //head
+            this.y = -40;
+
+        } else if (this._animation.position === 2) { //foot
+            this.y = this._target.height + 40;
+
+        } else {
+            this.y = this._target.height / 2;
+
+        }
+
+    }
+    
+}
+
 class Window_Title extends Window_Base {
     constructor() {
         super();
@@ -1820,19 +1914,29 @@ Scene_CardBattle.prototype.createSpriteset = function() {
 
     this.addChild(cardSet);
 
-    cardSet.move(40, 250);
+    cardSet.move(60, 200);
     cardSet.activate();
     // cardSet.openSetUp();
 
-    // @Test update points
+    // @Test flash card
     cardSet.addActions(0, [
         { type: '_ACTIVE' },
         { type: '_TURNUP' },
         { type: '_REFRESH' },
         { type: '_SHOW' },
         { type: '_OPEN' },
-        { type: '_POINTS', attack: 500, health: 900 },
+        { type: '_ANIMATION', animationIndex: 55 },
     ]);
+
+    // @Test update points
+    // cardSet.addActions(0, [
+    //     { type: '_ACTIVE' },
+    //     { type: '_TURNUP' },
+    //     { type: '_REFRESH' },
+    //     { type: '_SHOW' },
+    //     { type: '_OPEN' },
+    //     { type: '_POINTS', attack: 500, health: 900 },
+    // ]);
 
     // @Test finish move observable to action
     // cardSet.addActions(0, [

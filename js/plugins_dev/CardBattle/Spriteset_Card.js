@@ -1,4 +1,4 @@
-class Spriteset_Card extends Sprite {
+class Spriteset_Card extends Sprite_Base {
     constructor(Config) {
         super(Config);
 

@@ -27,9 +27,19 @@ Scene_CardBattle.prototype.createSpriteset = function() {
 
     this.addChild(cardSet);
 
-    cardSet.move(40, 250);
+    cardSet.move(60, 200);
     cardSet.activate();
     // cardSet.openSetUp();
+
+    // @Test flash card
+    cardSet.addActions(0, [
+        { type: '_ACTIVE' },
+        { type: '_TURNUP' },
+        { type: '_REFRESH' },
+        { type: '_SHOW' },
+        { type: '_OPEN' },
+        { type: '_ANIMATION', animationIndex: 55 },
+    ]);
 
     // @Test update points
     // cardSet.addActions(0, [
